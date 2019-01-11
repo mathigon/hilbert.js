@@ -1,0 +1,37 @@
+{
+  "name": "@mathigon/hilbert",
+  "version": "0.1.0",
+  "description": "JavaScript expression parsing, MathML rendering and CAS.",
+  "keywords": [
+    "mathematics",
+    "math",
+    "expressions",
+    "mathml"
+  ],
+  "homepage": "https://mathigon.io/",
+  "license": "MIT",
+  "author": {
+    "name": "Philipp Legner",
+    "email": "dev@mathigon.org",
+    "url": "https://mathigon.org"
+  },
+  "main": "build/hilbert.js",
+  "module": "index",
+  "jsnext:main": "index",
+  "repository": "mathigon/hilbert.js",
+  "scripts": {
+    "pretest": "rm -rf build && mkdir build && rollup -c build.js",
+    "test": "tape 'test/**/*-test.js' && eslint index.js src",
+    "prepublish": "npm test"
+  },
+  "dependencies": {
+    "@mathigon/fermat": "^0.2.5",
+    "@mathigon/core": "^0.2.3"
+  },
+  "devDependencies": {
+    "eslint": "^5.4.0",
+    "rollup": "^0.64.1",
+    "rollup-plugin-node-resolve": "^3.3.0",
+    "tape": "^4.9.1"
+  }
+}
