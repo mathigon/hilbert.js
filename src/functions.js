@@ -23,7 +23,7 @@ export class ExprFunction {
     this.args = args;
   }
 
-  evaluate(vars) {
+  evaluate(vars={}) {
     // TODO Implement for all functions
     const args = this.args.map(a => a.evaluate(vars));
     if (this.fn in vars) return vars[this.fn](...args);
@@ -43,7 +43,7 @@ export class ExprFunction {
     throw new ExprError('EvalError', `Unable to evaluate function "${this.fn}".`);
   }
 
-  substitute(vars) {
+  substitute(vars={}) {
     return new ExprFunction(this.fn, this.args.map(a => a.substitute(vars)));
   }
 
