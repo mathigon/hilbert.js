@@ -8,6 +8,18 @@ award-winning mathematics education project.
 [![npm](https://img.shields.io/github/license/mathigon/hilbert.js.svg)](https://github.com/mathigon/hilbert.js/blob/master/LICENSE)
 
 
+## Open Issues
+
+Note: this library is still under development, and not ready for production use.
+
+* [ ] Write `collapseTerm()` function
+* [ ] Write Function `evaluate()`, `toString()` and `toMathML()` methods
+* [ ] Lots of testing
+* [ ] Write Expression simplification algorithms, `equals()`, `numEquals()` and
+      `same()` methods
+* [ ] Remove expressions code from `fermat.js`
+
+
 ## Usage
 
 First, install hilbert.js from [NPM](https://www.npmjs.com/package/@mathigon/hilbert)
