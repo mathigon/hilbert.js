@@ -340,7 +340,7 @@ class ExprFunction {
     }
 
     if (isOneOf(this.fn, '(', '[', '{'))
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${this.args.join(COMMA)}</mfenced>`;
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${args.join(COMMA)}</mfenced>`;
 
     if (isOneOf(this.fn, '!', '%'))
       return args[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
@@ -437,7 +437,7 @@ function makeTerm(items) {
 function splitArray(items, check) {
   const result = [[]];
   for (let i of items) {
-    if (check[i]) {
+    if (check(i)) {
       result.push([]);
     } else {
       last(result).push(i);
@@ -479,7 +479,6 @@ function findBinaryFunction(tokens, fn, toFn) {
 function prepareTerm(tokens) {
   // TODO Combine sup and sub calls into a single supsub function.
   findBinaryFunction(tokens, '^', 'sup');
-  // TODO Remove fences as first arguments from fractions.
   findBinaryFunction(tokens, '/');
   return makeTerm(tokens);
 }

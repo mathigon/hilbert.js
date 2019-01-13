@@ -53,10 +53,29 @@ tape('Fractions', function(test) {
 tape('Super and Subscripts', function(test) {
   test.equal(mathML('a_i'), '<msub><mi>a</mi><mi>i</mi></msub>');
   test.equal(mathML('a^2'), '<msup><mi>a</mi><mn>2</mn></msup>');
-  test.equal(mathML('a^2 + b^2 = c^2'), '<msup><mi>a</mi><mn>2</mn></msup><mo>+</mo><msup><mi>b</mi><mn>2</mn></msup><mo>=</mo><msup><mi>c</mi><mn>2</mn></msup>');
+  test.equal(mathML('a^2 + b^2 = c^2'), '<msup><mi>a</mi><mn>2</mn></msup><mo value="+">+</mo><msup><mi>b</mi><mn>2</mn></msup><mo value="=">=</mo><msup><mi>c</mi><mn>2</mn></msup>');
   // test.equal(mathML('2^2^2^2'), '<msup><mrow><msup><mrow><msup><mn>2</mn><mn>2</mn></msup></mrow><mn>2</mn></msup></mrow><mn>2</mn></msup>');  // TODO Right-to-left
   // test.equal(mathML('a_i^2'), '<msubsup><mi>a</mi><mi>i</mi><mn>2</mn></msubsup>');  // TODO Support Super and Subscripts
   // test.equal(mathML('a^2_i'), '<msubsup><mi>a</mi><mi>i</mi><mn>2</mn></msubsup>');  // TODO Support Super and Subscripts
   test.end();
 });
 
+tape('Roots', function(test) {
+  test.equal(mathML('sqrt(x)'), '<msqrt><mi>x</mi></msqrt>');
+  test.equal(mathML('root(x, 3)'), '<mroot><mi>x</mi><mn>3</mn></mroot>');
+  test.equal(mathML('sqrt(2) ~~ 1.414213562'), '<msqrt><mn>2</mn></msqrt><mo value="≈">≈</mo><mn>1.414213562</mn>');
+  test.equal(mathML('x = (-b +- sqrt(b^2 - 4a c)) / (2a)'), '<mi>x</mi><mo value="=">=</mo><mfrac><mrow><mo value="-">-</mo><mi>b</mi><mo value="±">±</mo><msqrt><msup><mi>b</mi><mn>2</mn></msup><mo value="-">-</mo><mn>4</mn><mi>a</mi><mi>c</mi></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac>');
+  test.equal(mathML('phi = (1 + sqrt(5))/2'), '<mi>φ</mi><mo value="=">=</mo><mfrac><mrow><mn>1</mn><mo value="+">+</mo><msqrt><mn>5</mn></msqrt></mrow><mn>2</mn></mfrac>');
+  test.equal(mathML('sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + …)))))))'), '<msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><mo value="…">…</mo></msqrt></msqrt></msqrt></msqrt></msqrt></msqrt></msqrt>');
+  test.end();
+});
+
+tape('Groupings', function(test) {
+  test.equal(mathML('(a+b)'), '<mfenced open="(" close=")"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
+  test.equal(mathML('a,b,c'), '<mi>a</mi><mo value=",">,</mo><mi>b</mi><mo value=",">,</mo><mi>c</mi>');
+  test.equal(mathML('(a,b,c)'), '<mfenced open="(" close=")"><mi>a</mi><mo value="," lspace="0">,</mo><mi>b</mi><mo value="," lspace="0">,</mo><mi>c</mi></mfenced>');
+  test.equal(mathML('(x+y)(x-y) = x^2-y^2'), '<mfenced open="(" close=")"><mi>x</mi><mo value="+">+</mo><mi>y</mi></mfenced><mfenced open="(" close=")"><mi>x</mi><mo value="-">-</mo><mi>y</mi></mfenced><mo value="=">=</mo><msup><mi>x</mi><mn>2</mn></msup><mo value="-">-</mo><msup><mi>y</mi><mn>2</mn></msup>');
+  test.equal(mathML('e^(-x)'), '<msup><mi>e</mi><mrow><mo value="-">-</mo><mi>x</mi></mrow></msup>');
+  test.equal(mathML('e^(i tau) = 1'), '<msup><mi>e</mi><mrow><mi>i</mi><mi>τ</mi></mrow></msup><mo value="=">=</mo><mn>1</mn>');
+  test.end();
+});

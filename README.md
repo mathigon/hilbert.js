@@ -14,7 +14,7 @@ Note: this library is still under development, and not ready for production use.
 
 * [ ] __Finish collapseTerms: match non-binary addition and multiplication,
       match implicit multiplication, match starting - or ±.__
-* [ ] Decide when to show the times symbol between factor terms.
+* [ ] Decide when to show the times symbol between consecutive factors.
 * [ ] Support for functions with subscripts (e.g. `log_a(b)`).
 * [ ] Support for super+subscripts (e.g. `a_n^2` or `a^2_n`).
 * [ ] Support for large operators (sum, product and integral).

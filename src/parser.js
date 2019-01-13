@@ -96,7 +96,7 @@ function makeTerm(items) {
 function splitArray(items, check) {
   const result = [[]];
   for (let i of items) {
-    if (check[i]) {
+    if (check(i)) {
       result.push([]);
     } else {
       last(result).push(i);

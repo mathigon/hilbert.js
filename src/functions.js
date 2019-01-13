@@ -121,7 +121,7 @@ export class ExprFunction {
     }
 
     if (isOneOf(this.fn, '(', '[', '{'))
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${this.args.join(COMMA)}</mfenced>`;
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${args.join(COMMA)}</mfenced>`;
 
     if (isOneOf(this.fn, '!', '%'))
       return args[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
