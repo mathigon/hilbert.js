@@ -22,6 +22,11 @@ function needsBrackets(expr, parentFn) {
   return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr);
 }
 
+function addRow(expr, string) {
+  const needsRow = (expr instanceof ExprTerm) || (expr instanceof ExprFunction);
+  return needsRow ? `<mrow>${string}</mrow>` : string;
+}
+
 
 export class ExprFunction {
 
@@ -99,7 +104,7 @@ export class ExprFunction {
     if (this.fn === '-') return args.length > 1 ?
         args.join('<mo value="-">–</mo>') : '<mo rspace="0" value="-">–</mo>' + args[0];
 
-    if (words('+ = < > ≤ ≥ //').includes(this.fn))
+    if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥'))
       return args.join(`<mo value="${this.fn}">${this.fn}</mo>`);
 
     if (isOneOf(this.fn, '*', '×', '·')) {
@@ -107,14 +112,13 @@ export class ExprFunction {
       return args.join(showTimes ? `<mo value="×">×</mo>` : '');
     }
 
-    if (this.fn === '/')  // TODO Check if we need <mrow>s
-      return `<mfrac><mrow>${args[0]}</mrow><mrow>${args[1]}</mrow></mfrac>`;
-
-    if (this.fn === 'sup') return `<msup>${args[0]}<mrow>${args[1]}</mrow></msup>`;
-    if (this.fn === 'sub') return `<msub>${args[0]}<mrow>${args[1]}</mrow></msub>`;
-
     if (this.fn === 'sqrt') return `<msqrt>${args[0]}</msqrt>`;
-    if (this.fn === 'root') return `<mroot><mrow>${args[0]}</mrow><mrow>${args[1]}</mrow></mroot>`;
+
+    if (isOneOf(this.fn, '/', 'sup', 'sub', 'root')) {
+      const el =  {'/': 'mfrac', 'sup': 'msup', 'sub': 'msub', 'root': 'mroot'}[this.fn];
+      const args1 = args.map((a, i) => addRow(this.args[i], a));
+      return `<${el}>${args1.join('')}</${el}>`;
+    }
 
     if (isOneOf(this.fn, '(', '[', '{'))
       return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${this.args.join(COMMA)}</mfenced>`;

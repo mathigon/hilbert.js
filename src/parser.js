@@ -109,17 +109,24 @@ function isOperator(expr, fns) {
   return expr instanceof ExprOperator && words(fns).includes(expr.o);
 }
 
+function removeBrackets(expr) {
+  return (expr instanceof ExprFunction && expr.fn === '(') ? expr.args[0] : expr;
+}
+
 function findBinaryFunction(tokens, fn, toFn) {
   if (isOperator(tokens[0], fn) || isOperator(tokens[tokens.length - 1], fn))
     throw ExprError.startingOperator(fn);
 
   for (let i = 1; i < tokens.length - 1; ++i) {
     if (!isOperator(tokens[i], fn)) continue;
+
     const a = tokens[i - 1];
     const b = tokens[i + 1];
     if (a instanceof ExprOperator) throw ExprError.consecutiveOperators(a.o, tokens[i].o);
     if (b instanceof ExprOperator) throw ExprError.consecutiveOperators(tokens[i].o, b.o);
-    tokens.splice(i - 1, 3, new ExprFunction(toFn || tokens[i].o, [a, b]));
+
+    const args = [removeBrackets(a), removeBrackets(b)];
+    tokens.splice(i - 1, 3, new ExprFunction(toFn || tokens[i].o, args));
     i -= 2;
   }
 }
@@ -128,16 +135,15 @@ function findBinaryFunction(tokens, fn, toFn) {
 // -----------------------------------------------------------------------------
 // Match Brackets
 
-function prepareArg(tokens) {
+function prepareTerm(tokens) {
   // TODO Combine sup and sub calls into a single supsub function.
   findBinaryFunction(tokens, '^', 'sup');
-  findBinaryFunction(tokens, '_', 'sub');
-  // TODO Remove fences as first arguments from fractions.
-  findBinaryFunction(tokens, '/', '/');
+  findBinaryFunction(tokens, '/');
   return makeTerm(tokens);
 }
 
 export function matchBrackets(tokens) {
+  findBinaryFunction(tokens, '_', 'sub');
   const stack = [[]];
 
   for (let t of tokens) {
@@ -153,11 +159,11 @@ export function matchBrackets(tokens) {
 
       // Check if this is a normal bracket, or a function call.
       const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier);
-      const fnName = isFn ? term.pop().i : isOperator(t, '|') ? 'abs' : closed[0];
+      const fnName = isFn ? term.pop().i : isOperator(t, '|') ? 'abs' : closed[0].o;
 
       // Support multiple arguments for function calls.
       const args = splitArray(closed.slice(1), a => isOperator(a, ','));
-      term.push(new ExprFunction(fnName, args.map(prepareArg)));
+      term.push(new ExprFunction(fnName, args.map(prepareTerm)));
 
     } else if (isOperator(t, '( [ { |')) {
       stack.push([t]);
@@ -168,7 +174,7 @@ export function matchBrackets(tokens) {
   }
 
   if (stack.length > 1) throw ExprError.unclosedBracket(last(stack)[0].o);
-  return makeTerm(stack[0]);
+  return prepareTerm(stack[0]);
 }
 
 

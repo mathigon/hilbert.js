@@ -12,12 +12,19 @@ award-winning mathematics education project.
 
 Note: this library is still under development, and not ready for production use.
 
-* [ ] Write `collapseTerm()` function
-* [ ] Write Function `evaluate()`, `toString()` and `toMathML()` methods
-* [ ] Lots of testing
-* [ ] Write Expression simplification algorithms, `equals()`, `numEquals()` and
-      `same()` methods
-* [ ] Remove expressions code from `fermat.js`
+* [ ] __Finish collapseTerms: match non-binary addition and multiplication,
+      match implicit multiplication, match starting - or ±.__
+* [ ] Decide when to show the times symbol between factor terms.
+* [ ] Support for functions with subscripts (e.g. `log_a(b)`).
+* [ ] Support for super+subscripts (e.g. `a_n^2` or `a^2_n`).
+* [ ] Support for large operators (sum, product and integral).
+* [ ] Parse ^ operator from right to left (e.g. `2^2^2 == 2^(2^2)`).
+* [ ] Add `evaluate()`, `toString()` and `toMathML()` methods for many more
+      special functions.
+* [ ] Write CAS Expression simplification algorithms and `equals()`,
+      `numEquals()` and `same()` methods.
+* [ ] Remove expressions code from `fermat.js`.
+* [ ] Write many more tests.
 
 
 ## Usage

@@ -92,7 +92,7 @@ export  class ExprIdentifier extends Expression {
 
   substitute(vars={}) { return vars[this.i] || this; }
   get variables() { return [this.i]; }
-  toString() { return '' + this.i; }
+  toString() { return this.i; }
   toMathML() { return `<mi>${this.i}</mi>`; }
 }
 
@@ -110,8 +110,8 @@ export class ExprSpace {
 
 export class ExprOperator {
   constructor(o) { this.o = o; }
-  toString() { return '' + this.o; }
-  toMathML() { return `<mo value="${this.o}">${this.o}</mo>`; }
+  toString() { return this.o.replace('//', '/'); }
+  toMathML() { return `<mo value="${this.toString()}">${this.toString()}</mo>`; }
 }
 
 export class ExprTerm extends Expression {

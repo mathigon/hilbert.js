@@ -3,6 +3,78 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 // =============================================================================
+// Hilbert.js | Expression Errors
+// (c) Mathigon
+// =============================================================================
+
+
+
+/**
+ * Expression Error Class
+ */
+class ExprError extends Error {
+
+  constructor(name, message) {
+    super(message);
+    this.name = name;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Eval Errors
+
+  static undefinedVariable(x) {
+    return new ExprError('EvalError', `Undefined variable “${x}”.`);
+  }
+
+  static undefinedFunction(x) {
+    return new ExprError('EvalError', `Undefined function “${x}”.`);
+  }
+
+
+
+  // ---------------------------------------------------------------------------
+  // Syntax Errors
+
+  static invalidCharacter(x) {
+    return new ExprError('SyntaxError', `Unknown symbol “${x}”.`);
+  }
+
+  static conflictingBrackets(x) {
+    return new ExprError('SyntaxError', `Conflicting brackets “${x}”.`);
+  }
+
+  static unclosedBracket(x) {
+    return new ExprError('SyntaxError', `Unclosed bracket “${x}”.`);
+  }
+
+  static startingOperator(x) {
+    return new ExprError('SyntaxError', `A term cannot start or end with a “${x}”.`);
+  }
+
+  static consecutiveOperators(x, y) {
+    return new ExprError('SyntaxError', `A “${x}” cannot be followed by a “${y}”.`);
+  }
+
+  static invalidExpression() {
+    return new ExprError('SyntaxError', `This expression is invalid.`);
+  }
+}
+
+// =============================================================================
+
+
+/**
+ * Checks if x is strictly equal to any one of the following arguments
+ * @param {*} x
+ * @param {...*} values
+ * @returns {boolean}
+ */
+function isOneOf(x, ...values) {
+  for (let v of values) {
+    if (x === v) return true;
+  }
+  return false;
+}
 
 // =============================================================================
 
@@ -42,25 +114,18 @@ function flatten(array) {
 
 // =============================================================================
 
+
+/**
+ * Splits a string into space separated words.
+ * @param {string} str
+ * @returns {Array<string>}
+ */
+function words(str) {
+  if (!str) return [];
+  return str.trim().split(/\s+/);
+}
+
 // =============================================================================
-
-/*
- * Checks if an object is a string.
- * @param {*} x
- * @returns {boolean}
- */
-function isString(x) {
-  return (x instanceof String) || (typeof x === 'string');
-}
-
-/*
- * Checks if an object is a number.
- * @param {*} x
- * @returns {boolean}
- */
-function isNumber(x) {
-  return (x instanceof Number) || (typeof x === 'number');
-}
 
 // =============================================================================
 
@@ -71,10 +136,12 @@ function isNumber(x) {
 
 
 
+const BRACKETS = {'(': ')', '[': ']', '{': '}', '|': '|'};
+
 const SPECIAL_OPERATORS = {
   '*': '·',
   '**': '∗',
-  '//': '/',
+  '//': '//',
   '+-': '±',
   xx: '×',
   sum: '∑',
@@ -157,19 +224,29 @@ const UPPERCASE = ALPHABET.toUpperCase().split('');
 const GREEK = Object.values(SPECIAL_IDENTIFIERS);
 const IDENTIFIER_SYMBOLS = [...LOWERCASE, ...UPPERCASE, ...GREEK];
 
-const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–~';
+const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–~^_…';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
 
 // =============================================================================
 
 
-/* const PRECEDENCE = ['+', '-', '*', '/', 'sqrt', '^'];
+const PRECEDENCE = words('+ - * × · // ^');
+const COMMA = '<mo value="," lspace="0">,</mo>';
 
-function needsBrackets(expr, parentOperator) {
-  if (isNumber(expr) || isString(expr)) return false;
-  return PRECEDENCE.indexOf(parentOperator) < PRECEDENCE.indexOf(expr[0]);
-} */
+function needsBrackets(expr, parentFn) {
+  if (!PRECEDENCE.includes(parentFn)) return false;
+  if (expr instanceof ExprTerm) return true;
+  if (!(expr instanceof ExprFunction)) return false;
+  if (!PRECEDENCE.includes(expr.fn)) return false;
+  return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr);
+}
+
+function addRow(expr, string) {
+  const needsRow = (expr instanceof ExprTerm) || (expr instanceof ExprFunction);
+  return needsRow ? `<mrow>${string}</mrow>` : string;
+}
+
 
 class ExprFunction {
 
@@ -178,27 +255,31 @@ class ExprFunction {
     this.args = args;
   }
 
-  evaluate(vars) {
-    // TODO Implement for all functions
+  evaluate(vars={}) {
     const args = this.args.map(a => a.evaluate(vars));
     if (this.fn in vars) return vars[this.fn](...args);
 
     switch(this.fn) {
       case '+': return args.reduce((a, b) => a + b, 0);
-      // TODO case '-': return (a, b) => (b === undefined) ? -a : a - b;
-      case '*': return args.reduce((a, b) => a * b, 1);
+      case '-': return (args.length > 1) ? args[1] - args[0] : -args[0];
+      case '*':
+      case '·':
+      case '×': return args.reduce((a, b) => a * b, 1);
       case '/': return args[0] / args[1];
       case 'sin': return Math.sin(args[0]);
       case 'cos': return Math.sin(args[0]);
       case 'tan': return Math.sin(args[0]);
       case 'log': return Math.log(args[0]) / Math.log(args[1] || Math.E);
       case 'sup': return Math.pow(args[0], args[1]);
+      case 'sqrt': return Math.sqrt(args[0]);
+      case 'root': return Math.pow(args[0], 1 / args[1]);
+      // TODO Implement for all functions
     }
 
-    throw new ExprError('EvalError', `Unable to evaluate function "${this.fn}".`);
+    throw ExprError.undefinedFunction(this.fn);
   }
 
-  substitute(vars) {
+  substitute(vars={}) {
     return new ExprFunction(this.fn, this.args.map(a => a.substitute(vars)));
   }
 
@@ -216,61 +297,71 @@ class ExprFunction {
   }
 
   toString() {
-    // TODO Implement for all functions
-    const args = this.args.map(a => a.toString());
+    const args = this.args.map(a => needsBrackets(a, this.fn) ?
+        '(' + a.toString() + ')' : a.toString());
 
-    switch(this.fn) {
-      case '+': return args.join(' + ');
-      // '-': (a, b) => (b === undefined) ? '-' + a : a + ' - ' + b,
-      // '*': (...args) => args.join('*'),
-      // '/': (a, b) => a + '/' + b,
-      // '!': x => x + '!',
-      // '%': x => x + '%',
-      // 'abs': x => '|' + x + '|',
-      // '^': (a, b) => a + '^' + b,
-      // '=': (a, b) => a + ' = ' + b,
-      // '<': (a, b) => a + ' < ' + b,
-      // '>': (a, b) => a + ' > ' + b,
-      // '≤': (a, b) => a + ' ≤ ' + b,
-      // '≥': (a, b) => a + ' ≥ ' + b
-    }
+    if (this.fn === '-')
+      return args.length > 1 ? args.join(' – ') : '-' + args[0];
 
+    if (words('+ * × · / sup = < > ≤ ≥').includes(this.fn))
+      return args.join(' ' + this.fn + ' ');
+
+    if (isOneOf(this.fn, '(', '[', '{'))
+      return this.fn + this.args.join(', ') + BRACKETS[this.fn];
+
+    if (isOneOf(this.fn, '!', '%')) return args[0] + this.fn;
+
+    // TODO Implement other functions
     return `${this.fn}(${args.join(', ')})`;
   }
 
-  toMathML() {
-    // TODO Implement for all functions
-    // TODO Distinguish between fractions and '÷'.
-    const args = this.args.map(a => a.toMathML());
+  toMathML(custom={}) {
+    const args = this.args.map(a => needsBrackets(a, this.fn) ?
+        '<mfenced>' + a.toMathML() + '</mfenced>' : a.toMathML());
 
-    // const argsStr = this.args.map(a => needsBrackets(a, this.fn) ?
-    //     `<mfenced>${a.toMathML()}</mfenced>` : a.toMathML());
+    if (this.fn in custom) return custom[this.fn](...args);
 
-    switch(this.fn) {
-      case 'sqrt': return `<msqrt>${args[0]}</msqrt>`;
-      case '/': return `<mfrac><mrow>${args[0]}</mrow><mrow>${args[1]}</mrow></mfrac>`;
-      case 'sup': return `<msup>${args[0]}<mrow>${args[1]}</mrow></msup>`;
-      case '*':
-        if (isNumber(this.args[0]) && isString(this.args[1])) return args.join('');
-        return args.join('<mo value="×">×</mo>');
-      case '+': return args.join('<mo value="+">+</mo>');
-      case '-': return args.join('<mo value="–">–</mo>');
-      default: return `<mi>TODO</mi>`;
+    if (this.fn === '-') return args.length > 1 ?
+        args.join('<mo value="-">–</mo>') : '<mo rspace="0" value="-">–</mo>' + args[0];
+
+    if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥'))
+      return args.join(`<mo value="${this.fn}">${this.fn}</mo>`);
+
+    if (isOneOf(this.fn, '*', '×', '·')) {
+      return args.join('');
     }
+
+    if (this.fn === 'sqrt') return `<msqrt>${args[0]}</msqrt>`;
+
+    if (isOneOf(this.fn, '/', 'sup', 'sub', 'root')) {
+      const el =  {'/': 'mfrac', 'sup': 'msup', 'sub': 'msub', 'root': 'mroot'}[this.fn];
+      const args1 = args.map((a, i) => addRow(this.args[i], a));
+      return `<${el}>${args1.join('')}</${el}>`;
+    }
+
+    if (isOneOf(this.fn, '(', '[', '{'))
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${this.args.join(COMMA)}</mfenced>`;
+
+    if (isOneOf(this.fn, '!', '%'))
+      return args[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
+
+    // TODO Implement other functions
+    return `<mi>${this.fn}</mi><mfenced>${args.join(COMMA)}</mfenced>`;
   }
 }
 
 // =============================================================================
 
-const BRACKETS = {'(': ')', '[': ']', '{': '}', '|': '|'};
+
 
 // -----------------------------------------------------------------------------
+// Tokenizer
 
 function createToken(buffer, type) {
   if (!buffer || !type) return null;
 
   if (type === 'NUM') return new ExprNumber(+buffer);
-  if (type === 'SPACE' && buffer.length > 1) return [new ExprSpace()];
+  if (type === 'SPACE' && buffer.length > 1) return new ExprSpace();
   if (type === 'STRING') return new ExprString(buffer);
 
   if (type === 'VAR') {
@@ -314,7 +405,7 @@ function tokenize(str) {
 
     const sType = s.match(/[0-9.]/) ? 'NUM' : IDENTIFIER_SYMBOLS.includes(s) ? 'VAR' :
         OPERATOR_SYMBOLS.includes(s) ? 'OP' : s.match(/\s/) ? 'SPACE' : '';
-    if (!sType) throw new ExprError('Syntax Error', `Unknown symbol "${s}".`);
+    if (!sType) throw ExprError.invalidCharacter(s);
 
     if (!type || (type === 'NUM' && sType !== 'NUM') ||
         (type === 'VAR' && sType !== 'VAR' && sType !== 'NUM') ||
@@ -335,7 +426,9 @@ function tokenize(str) {
   return tokens;
 }
 
+
 // -----------------------------------------------------------------------------
+// Utility Functions
 
 function makeTerm(items) {
   return (items.length === 1) ? items[0] : new ExprTerm(items);
@@ -353,29 +446,68 @@ function splitArray(items, check) {
   return result;
 }
 
+function isOperator(expr, fns) {
+  return expr instanceof ExprOperator && words(fns).includes(expr.o);
+}
+
+function removeBrackets(expr) {
+  return (expr instanceof ExprFunction && expr.fn === '(') ? expr.args[0] : expr;
+}
+
+function findBinaryFunction(tokens, fn, toFn) {
+  if (isOperator(tokens[0], fn) || isOperator(tokens[tokens.length - 1], fn))
+    throw ExprError.startingOperator(fn);
+
+  for (let i = 1; i < tokens.length - 1; ++i) {
+    if (!isOperator(tokens[i], fn)) continue;
+
+    const a = tokens[i - 1];
+    const b = tokens[i + 1];
+    if (a instanceof ExprOperator) throw ExprError.consecutiveOperators(a.o, tokens[i].o);
+    if (b instanceof ExprOperator) throw ExprError.consecutiveOperators(tokens[i].o, b.o);
+
+    const args = [removeBrackets(a), removeBrackets(b)];
+    tokens.splice(i - 1, 3, new ExprFunction(toFn || tokens[i].o, args));
+    i -= 2;
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// Match Brackets
+
+function prepareTerm(tokens) {
+  // TODO Combine sup and sub calls into a single supsub function.
+  findBinaryFunction(tokens, '^', 'sup');
+  // TODO Remove fences as first arguments from fractions.
+  findBinaryFunction(tokens, '/');
+  return makeTerm(tokens);
+}
+
 function matchBrackets(tokens) {
+  findBinaryFunction(tokens, '_', 'sub');
   const stack = [[]];
 
   for (let t of tokens) {
     const lastOpen = last(stack).length ? last(stack)[0].o : null;
 
-    if (')]}'.includes(t.o) || (t.o === '|' && lastOpen === '|')) {
+    if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
 
-      if (t.o !== BRACKETS[lastOpen])
-        throw new ExprError('SyntaxError', `Unmatched bracket “${t.o}”.`);
+      if (!isOperator(t, BRACKETS[lastOpen]))
+        throw ExprError.conflictingBrackets(t.o);
 
       const closed = stack.pop();
       const term = last(stack);
 
       // Check if this is a normal bracket, or a function call.
-      const isFn = (t.o === ')' && last(term) instanceof ExprIdentifier);
-      const fnName = isFn ? term.pop().i : t.o === '|' ? 'abs' : closed[0];
+      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier);
+      const fnName = isFn ? term.pop().i : isOperator(t, '|') ? 'abs' : closed[0].o;
 
       // Support multiple arguments for function calls.
-      const args = splitArray(closed.slice(1), a => a.o === ',');
-      term.push(new ExprFunction(fnName, args.map(makeTerm)));
+      const args = splitArray(closed.slice(1), a => isOperator(a, ','));
+      term.push(new ExprFunction(fnName, args.map(prepareTerm)));
 
-    } else if('([{|'.includes(t.o)) {
+    } else if (isOperator(t, '( [ { |')) {
       stack.push([t]);
 
     } else {
@@ -383,55 +515,29 @@ function matchBrackets(tokens) {
     }
   }
 
-  if (stack.length > 1)
-    throw new ExprError('SyntaxError', `Unclosed bracket “${last(stack)[0]}”.`);
-
-  return makeTerm(stack[0]);
+  if (stack.length > 1) throw ExprError.unclosedBracket(last(stack)[0].o);
+  return prepareTerm(stack[0]);
 }
 
+
 // -----------------------------------------------------------------------------
+// Collapse term items
 
-/* function findBinaryFunction(tokens, chars) {
-  for (let i=0; i<tokens.length; ++i) {
-    if (chars.includes(tokens[i])) {
-      let a = tokens[i-1];
-      let b = tokens[i+1];
-      if (b == null) throw new ExprError('SyntaxError', `An expression cannot end with a “${tokens[i]}”.`);
-      if ('+-* / ^% ! ' .includes(a)) throw new ExprError('SyntaxError', `A “${a}” cannot be followed by a “${tokens[i]}”.`);
-      if ('+-* /^%!'.includes(b)) throw new ExprError('SyntaxError', `A “${tokens[i]}” cannot be followed by a “${b}”.`);
-      tokens.splice(i - 1, 3, [tokens[i], a, b]);
-      i -= 2;
-    }
-  }
-}*/
+function collapseTerm(tokens) {
+  findBinaryFunction(tokens, '= < > ≤ ≥');
+  findBinaryFunction(tokens, '//', '/');
 
-function collapseTerm() {
-  // TODO Operators to functions, implicit multiplication, equals sign, ...
-  // TODO Support >2 arguments for + and *
+  // TODO Match multiplication and implicit multiplication
 
-  /*
-  findBinaryFunction(tokens, '^');  // Powers
-  findBinaryFunction(tokens, '* /');  // Multiplication and division.
+  // TODO Match starting - or ±
 
-  // Implicit multiplication (consecutive expressions)
-  for (let i=0; i<tokens.length-1; ++i) {
-    if (!'+-* /^%!'.includes(tokens[i]) && !'+-* /^%!'.includes(tokens[i+1])) {
-      tokens.splice(i, 2, ['*', tokens[i], tokens[i+1]]);
-      i -= 1;
-    }
-  }
+  findBinaryFunction(tokens, '-', '-');
+  findBinaryFunction(tokens, '±', '±');
 
-  // Leading (plus)minus.
-  if ('-±'.includes(tokens[0])) {
-    if (tokens.length <= 1) throw new ExprError('SyntaxError', `This expression is invalid.`);
-    tokens.splice(0, 2, [tokens[0], tokens[1]]);
-  }
+  // TODO Match addition
 
-  findBinaryFunction(tokens, '+-±');  // Addition and subtraction.
-  findBinaryFunction(tokens, '=<>≤≥');  // Equalities and inequalities.
-
-  if (tokens.length > 1) throw new ExprError('SyntaxError', `This expression is invalid.`);
-  return tokens[0]; */
+  if (tokens.length > 1) throw ExprError.invalidExpression();
+  return tokens[0];
 }
 
 // =============================================================================
@@ -442,23 +548,65 @@ const CONSTANTS = {
   e: Math.E
 };
 
+/**
+ * Maths Expression
+ */
 class Expression {
+
+  /**
+   * Parses a string to an expression.
+   * @param {string} str
+   * @returns {Expression}
+   */
   static parse(str) { return matchBrackets(tokenize(str)) }
-  evaluate() { return null; }
-  substitute() { return this; }
+
+  /**
+   * Evaluates an expression using a given map of variables and functions.
+   * @param {Object.<String, Expression>=} _vars
+   * @returns {number|null}
+   */
+  evaluate(_vars={}) { return null; }
+
+  /**
+   * Substitutes a new expression for a variable.
+   * @param {Object.<String, Expression>=} _vars
+   * @returns {Expression}
+   */
+  substitute(_vars={}) { return this; }
+
+  /**
+   * Returns the simplest mathematically equivalent expression.
+   * @returns {Expression}
+   */
   get simplified() { return this; }
+
+  /**
+   * Returns a list of all variables used in the expression.
+   * @returns {String[]}
+   */
   get variables() { return []; }
+
+  /**
+   * Returns a list of all functions called by the expression.
+   * @returns {String[]}
+   */
   get functions() { return []; }
+
+  /**
+   * Converts the expression to a plain text string.
+   * @returns {string}
+   */
   toString() { return ''; }
-  toMathML() { return ''; }
+
+  /**
+   * Converts the expression to a MathML string.
+   * @param {Object.<String, Function>=} _custom
+   * @returns {string}
+   */
+  toMathML(_custom={}) { return ''; }
 }
 
-class ExprError extends Error {
-  constructor(name, message) {
-    super(message);
-    this.name = name;
-  }
-}
+// -----------------------------------------------------------------------------
 
 class ExprNumber extends Expression {
   constructor(n) { super(); this.n = n; }
@@ -470,45 +618,45 @@ class ExprNumber extends Expression {
 class ExprIdentifier extends Expression {
   constructor(i) { super(); this.i = i; }
 
-  evaluate(vars) {
+  evaluate(vars={}) {
     if (this.i in vars) return vars[this.i];
     if (this.i in CONSTANTS) return CONSTANTS[this.i];
-    throw new ExprError('EvalError', `Unknown identifier "${this.i}".`);
+    throw ExprError.undefinedVariable(this.i);
   }
 
-  substitute(vars) { return vars[this.i] || this; }
+  substitute(vars={}) { return vars[this.i] || this; }
   get variables() { return [this.i]; }
-  toString() { return '' + this.i; }
+  toString() { return this.i; }
   toMathML() { return `<mi>${this.i}</mi>`; }
 }
 
 class ExprString extends Expression {
   constructor(s) { super(); this.s = s; }
-  evaluate() { throw new ExprError('EvalError', 'Expressions contains a string.'); }
+  evaluate() { throw ExprError.undefinedVariable(this.s); }
   toString() { return '"' + this.s + '"'; }
   toMathML() { return `<mtext>${this.s}</mtext>`; }
 }
 
 class ExprSpace {
   toString() { return ' '; }
-  toMathML() { return `<mspace></mspace>`; }
+  toMathML() { return `<mspace/>`; }
 }
 
 class ExprOperator {
   constructor(o) { this.o = o; }
-  toString() { return '' + this.o; }
-  toMathML() { return `<mo value="${this.o}">${this.o}</mo>`; }
+  toString() { return this.o.replace('//', '/'); }
+  toMathML() { return `<mo value="${this.toString()}">${this.toString()}</mo>`; }
 }
 
 class ExprTerm extends Expression {
   constructor(items) { super(); this.items = items; }
-  evaluate(vars) { return this.toFunction().evaluate(vars); }
-  substitute(vars) { return this.toFunction().substitute(vars); }
+  evaluate(vars={}) { return this.toFunction().evaluate(vars); }
+  substitute(vars={}) { return this.toFunction().substitute(vars); }
   get simplified() { return this.toFunction().variables; }
   get variables() { return this.toFunction().variables; }
   get functions() { return this.toFunction().functions; }
   toString() { return this.items.map(i => i.toString()).join(' '); }
-  toMathML() { return this.items.map(i => i.toMathML()).join(''); }
+  toMathML(custom={}) { return this.items.map(i => i.toMathML(custom)).join(''); }
   toFunction() { return collapseTerm(this.items); }
 }
 

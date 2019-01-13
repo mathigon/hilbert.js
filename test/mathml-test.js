@@ -31,3 +31,32 @@ tape('Whitespace', function(test) {
   test.end();
 });
 
+tape('Functions', function(test) {
+  test.equal(mathML('sin (a + b)'), '<mi>sin</mi><mfenced><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
+  test.equal(mathML('tan = sin/cos'), '<mi>tan</mi><mo value="=">=</mo><mfrac><mi>sin</mi><mi>cos</mi></mfrac>');
+  test.equal(mathML('sinh(x) = (e^x - e^(-x))/2'), '<mi>sinh</mi><mfenced><mi>x</mi></mfenced><mo value="=">=</mo><mfrac><mrow><msup><mi>e</mi><mi>x</mi></msup><mo value="-">-</mo><msup><mi>e</mi><mrow><mo value="-">-</mo><mi>x</mi></mrow></msup></mrow><mn>2</mn></mfrac>');
+  test.equal(mathML('ln(x^2) = 2 ln(x)'), '<mi>ln</mi><mfenced><msup><mi>x</mi><mn>2</mn></msup></mfenced><mo value="=">=</mo><mn>2</mn><mi>ln</mi><mfenced><mi>x</mi></mfenced>');
+  test.equal(mathML('ln(x/y) = ln(x) - ln(y)'), '<mi>ln</mi><mfenced><mfrac><mi>x</mi><mi>y</mi></mfrac></mfenced><mo value="=">=</mo><mi>ln</mi><mfenced><mi>x</mi></mfenced><mo value="-">-</mo><mi>ln</mi><mfenced><mi>y</mi></mfenced>');
+  test.equal(mathML('a^(p-1) == 1'), '<msup><mi>a</mi><mrow><mi>p</mi><mo value="-">-</mo><mn>1</mn></mrow></msup><mo value="≡">≡</mo><mn>1</mn>');
+  // test.equal(mathML('log_b(x) = log_k(x)/log_k(b)'), 'xxx');  // TODO Support functions with subscripts
+  test.end();
+});
+
+tape('Fractions', function(test) {
+  test.equal(mathML('a/b'), '<mfrac><mi>a</mi><mi>b</mi></mfrac>');
+  test.equal(mathML('a//b'), '<mi>a</mi><mo value="/">/</mo><mi>b</mi>');
+  test.equal(mathML('(a+b)/(c+d)'), '<mfrac><mrow><mi>a</mi><mo value="+">+</mo><mi>b</mi></mrow><mrow><mi>c</mi><mo value="+">+</mo><mi>d</mi></mrow></mfrac>');
+  test.equal(mathML('phi = 1 + 1/(1 + 1/(1 + 1/(1 + 1/(1 + …))))'), '<mi>φ</mi><mo value="=">=</mo><mn>1</mn><mo value="+">+</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo value="+">+</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo value="+">+</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo value="+">+</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo value="+">+</mo><mo value="…">…</mo></mrow></mfrac></mrow></mfrac></mrow></mfrac></mrow></mfrac>');
+  test.end();
+});
+
+tape('Super and Subscripts', function(test) {
+  test.equal(mathML('a_i'), '<msub><mi>a</mi><mi>i</mi></msub>');
+  test.equal(mathML('a^2'), '<msup><mi>a</mi><mn>2</mn></msup>');
+  test.equal(mathML('a^2 + b^2 = c^2'), '<msup><mi>a</mi><mn>2</mn></msup><mo>+</mo><msup><mi>b</mi><mn>2</mn></msup><mo>=</mo><msup><mi>c</mi><mn>2</mn></msup>');
+  // test.equal(mathML('2^2^2^2'), '<msup><mrow><msup><mrow><msup><mn>2</mn><mn>2</mn></msup></mrow><mn>2</mn></msup></mrow><mn>2</mn></msup>');  // TODO Right-to-left
+  // test.equal(mathML('a_i^2'), '<msubsup><mi>a</mi><mi>i</mi><mn>2</mn></msubsup>');  // TODO Support Super and Subscripts
+  // test.equal(mathML('a^2_i'), '<msubsup><mi>a</mi><mi>i</mi><mn>2</mn></msubsup>');  // TODO Support Super and Subscripts
+  test.end();
+});
+
