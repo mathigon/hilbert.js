@@ -5,20 +5,22 @@
 
 
 
-import { last } from '@mathigon/core'
-import { SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS } from './symbols'
-import { ExprError, ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprTerm } from "./expression";
+import { last, words } from '@mathigon/core'
+import { SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, BRACKETS } from './symbols'
+import { ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprTerm } from "./expression";
 import { ExprFunction } from "./functions";
+import { ExprError } from "./errors";
 
-const BRACKETS = {'(': ')', '[': ']', '{': '}', '|': '|'};
+
 
 // -----------------------------------------------------------------------------
+// Tokenizer
 
 function createToken(buffer, type) {
   if (!buffer || !type) return null;
 
   if (type === 'NUM') return new ExprNumber(+buffer);
-  if (type === 'SPACE' && buffer.length > 1) return [new ExprSpace()];
+  if (type === 'SPACE' && buffer.length > 1) return new ExprSpace();
   if (type === 'STRING') return new ExprString(buffer);
 
   if (type === 'VAR') {
@@ -62,7 +64,7 @@ export function tokenize(str) {
 
     const sType = s.match(/[0-9.]/) ? 'NUM' : IDENTIFIER_SYMBOLS.includes(s) ? 'VAR' :
         OPERATOR_SYMBOLS.includes(s) ? 'OP' : s.match(/\s/) ? 'SPACE' : '';
-    if (!sType) throw new ExprError('Syntax Error', `Unknown symbol "${s}".`);
+    if (!sType) throw ExprError.invalidCharacter(s);
 
     if (!type || (type === 'NUM' && sType !== 'NUM') ||
         (type === 'VAR' && sType !== 'VAR' && sType !== 'NUM') ||
@@ -83,7 +85,9 @@ export function tokenize(str) {
   return tokens;
 }
 
+
 // -----------------------------------------------------------------------------
+// Utility Functions
 
 function makeTerm(items) {
   return (items.length === 1) ? items[0] : new ExprTerm(items);
@@ -101,29 +105,61 @@ function splitArray(items, check) {
   return result;
 }
 
+function isOperator(expr, fns) {
+  return expr instanceof ExprOperator && words(fns).includes(expr.o);
+}
+
+function findBinaryFunction(tokens, fn, toFn) {
+  if (isOperator(tokens[0], fn) || isOperator(tokens[tokens.length - 1], fn))
+    throw ExprError.startingOperator(fn);
+
+  for (let i = 1; i < tokens.length - 1; ++i) {
+    if (!isOperator(tokens[i], fn)) continue;
+    const a = tokens[i - 1];
+    const b = tokens[i + 1];
+    if (a instanceof ExprOperator) throw ExprError.consecutiveOperators(a.o, tokens[i].o);
+    if (b instanceof ExprOperator) throw ExprError.consecutiveOperators(tokens[i].o, b.o);
+    tokens.splice(i - 1, 3, new ExprFunction(toFn || tokens[i].o, [a, b]));
+    i -= 2;
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// Match Brackets
+
+function prepareArg(tokens) {
+  // TODO Combine sup and sub calls into a single supsub function.
+  findBinaryFunction(tokens, '^', 'sup');
+  findBinaryFunction(tokens, '_', 'sub');
+  // TODO Remove fences as first arguments from fractions.
+  findBinaryFunction(tokens, '/', '/');
+  return makeTerm(tokens);
+}
+
 export function matchBrackets(tokens) {
   const stack = [[]];
 
   for (let t of tokens) {
     const lastOpen = last(stack).length ? last(stack)[0].o : null;
 
-    if (')]}'.includes(t.o) || (t.o === '|' && lastOpen === '|')) {
+    if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
 
-      if (t.o !== BRACKETS[lastOpen])
-        throw new ExprError('SyntaxError', `Unmatched bracket “${t.o}”.`);
+      if (!isOperator(t, BRACKETS[lastOpen]))
+        throw ExprError.conflictingBrackets(t.o);
 
       const closed = stack.pop();
       const term = last(stack);
 
       // Check if this is a normal bracket, or a function call.
-      const isFn = (t.o === ')' && last(term) instanceof ExprIdentifier);
-      const fnName = isFn ? term.pop().i : t.o === '|' ? 'abs' : closed[0];
+      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier);
+      const fnName = isFn ? term.pop().i : isOperator(t, '|') ? 'abs' : closed[0];
 
       // Support multiple arguments for function calls.
-      const args = splitArray(closed.slice(1), a => a.o === ',');
-      term.push(new ExprFunction(fnName, args.map(makeTerm)));
+      const args = splitArray(closed.slice(1), a => isOperator(a, ','));
+      term.push(new ExprFunction(fnName, args.map(prepareArg)));
 
-    } else if('([{|'.includes(t.o)) {
+    } else if (isOperator(t, '( [ { |')) {
       stack.push([t]);
 
     } else {
@@ -131,53 +167,27 @@ export function matchBrackets(tokens) {
     }
   }
 
-  if (stack.length > 1)
-    throw new ExprError('SyntaxError', `Unclosed bracket “${last(stack)[0]}”.`);
-
+  if (stack.length > 1) throw ExprError.unclosedBracket(last(stack)[0].o);
   return makeTerm(stack[0]);
 }
 
+
 // -----------------------------------------------------------------------------
+// Collapse term items
 
-/* function findBinaryFunction(tokens, chars) {
-  for (let i=0; i<tokens.length; ++i) {
-    if (chars.includes(tokens[i])) {
-      let a = tokens[i-1];
-      let b = tokens[i+1];
-      if (b == null) throw new ExprError('SyntaxError', `An expression cannot end with a “${tokens[i]}”.`);
-      if ('+-* / ^% ! ' .includes(a)) throw new ExprError('SyntaxError', `A “${a}” cannot be followed by a “${tokens[i]}”.`);
-      if ('+-* /^%!'.includes(b)) throw new ExprError('SyntaxError', `A “${tokens[i]}” cannot be followed by a “${b}”.`);
-      tokens.splice(i - 1, 3, [tokens[i], a, b]);
-      i -= 2;
-    }
-  }
-}*/
+export function collapseTerm(tokens) {
+  findBinaryFunction(tokens, '= < > ≤ ≥');
+  findBinaryFunction(tokens, '//', '/');
 
-export function collapseTerm() {
-  // TODO Operators to functions, implicit multiplication, equals sign, ...
-  // TODO Support >2 arguments for + and *
+  // TODO Match multiplication and implicit multiplication
 
-  /*
-  findBinaryFunction(tokens, '^');  // Powers
-  findBinaryFunction(tokens, '* /');  // Multiplication and division.
+  // TODO Match starting - or ±
 
-  // Implicit multiplication (consecutive expressions)
-  for (let i=0; i<tokens.length-1; ++i) {
-    if (!'+-* /^%!'.includes(tokens[i]) && !'+-* /^%!'.includes(tokens[i+1])) {
-      tokens.splice(i, 2, ['*', tokens[i], tokens[i+1]]);
-      i -= 1;
-    }
-  }
+  findBinaryFunction(tokens, '-', '-');
+  findBinaryFunction(tokens, '±', '±');
 
-  // Leading (plus)minus.
-  if ('-±'.includes(tokens[0])) {
-    if (tokens.length <= 1) throw new ExprError('SyntaxError', `This expression is invalid.`);
-    tokens.splice(0, 2, [tokens[0], tokens[1]]);
-  }
+  // TODO Match addition
 
-  findBinaryFunction(tokens, '+-±');  // Addition and subtraction.
-  findBinaryFunction(tokens, '=<>≤≥');  // Equalities and inequalities.
-
-  if (tokens.length > 1) throw new ExprError('SyntaxError', `This expression is invalid.`);
-  return tokens[0]; */
+  if (tokens.length > 1) throw ExprError.invalidExpression();
+  return tokens[0];
 }

@@ -12,7 +12,7 @@ const expr = (src) => hilbert.Expression.parse(src);
 const mathML = (src) => expr(src).toMathML();
 
 
-tape('basic', function(test) {
+tape('Basic', function(test) {
   test.equal(mathML('42'), '<mn>42</mn>');
   test.equal(mathML('3.141592654'), '<mn>3.141592654</mn>');
   test.equal(mathML('x'), '<mi>x</mi>');
@@ -24,3 +24,10 @@ tape('basic', function(test) {
   test.equal(mathML('3 - 2=1'), '<mn>3</mn><mo value="-">-</mo><mn>2</mn><mo value="=">=</mo><mn>1</mn>');
   test.end();
 });
+
+tape('Whitespace', function(test) {
+  test.equal(mathML('a  b'), '<mi>a</mi><mspace/><mi>b</mi>');
+  test.equal(mathML('a b'), '<mi>a</mi><mi>b</mi>');
+  test.end();
+});
+

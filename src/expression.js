@@ -6,6 +6,7 @@
 
 
 import { tokenize, matchBrackets, collapseTerm } from './parser'
+import { ExprError } from './errors'
 
 
 const CONSTANTS = {
@@ -14,7 +15,7 @@ const CONSTANTS = {
 };
 
 /**
- *
+ * Maths Expression
  */
 export class Expression {
 
@@ -65,19 +66,10 @@ export class Expression {
 
   /**
    * Converts the expression to a MathML string.
+   * @param {Object.<String, Function>=} _custom
    * @returns {string}
    */
-  toMathML() { return ''; }
-}
-
-/**
- * Expression Error Class
- */
-export class ExprError extends Error {
-  constructor(name, message) {
-    super(message);
-    this.name = name;
-  }
+  toMathML(_custom={}) { return ''; }
 }
 
 // -----------------------------------------------------------------------------
@@ -95,7 +87,7 @@ export  class ExprIdentifier extends Expression {
   evaluate(vars={}) {
     if (this.i in vars) return vars[this.i];
     if (this.i in CONSTANTS) return CONSTANTS[this.i];
-    throw new ExprError('EvalError', `Unknown identifier "${this.i}".`);
+    throw ExprError.undefinedVariable(this.i);
   }
 
   substitute(vars={}) { return vars[this.i] || this; }
@@ -106,14 +98,14 @@ export  class ExprIdentifier extends Expression {
 
 export class ExprString extends Expression {
   constructor(s) { super(); this.s = s; }
-  evaluate() { throw new ExprError('EvalError', 'Expressions contains a string.'); }
+  evaluate() { throw ExprError.undefinedVariable(this.s); }
   toString() { return '"' + this.s + '"'; }
   toMathML() { return `<mtext>${this.s}</mtext>`; }
 }
 
 export class ExprSpace {
   toString() { return ' '; }
-  toMathML() { return `<mspace></mspace>`; }
+  toMathML() { return `<mspace/>`; }
 }
 
 export class ExprOperator {
@@ -130,6 +122,6 @@ export class ExprTerm extends Expression {
   get variables() { return this.toFunction().variables; }
   get functions() { return this.toFunction().functions; }
   toString() { return this.items.map(i => i.toString()).join(' '); }
-  toMathML() { return this.items.map(i => i.toMathML()).join(''); }
+  toMathML(custom={}) { return this.items.map(i => i.toMathML(custom)).join(''); }
   toFunction() { return collapseTerm(this.items); }
 }

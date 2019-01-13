@@ -5,4 +5,5 @@
 
 
 
-export {ExprError, Expression} from './src/expression'
+export { ExprError } from './src/errors'
+export { Expression } from './src/expression'
