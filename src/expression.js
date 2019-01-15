@@ -5,12 +5,14 @@
 
 
 
+import { unique } from '@mathigon/core';
+import { nearlyEquals } from '@mathigon/fermat';
 import { tokenize, matchBrackets, collapseTerm } from './parser'
 import { ExprError } from './errors'
 
 
 const CONSTANTS = {
-  pi: Math.PI,
+  π: Math.PI,
   e: Math.E
 };
 
@@ -70,6 +72,28 @@ export class Expression {
    * @returns {string}
    */
   toMathML(_custom={}) { return ''; }
+
+  /**
+   * Checks numerically if two expressions are equal. Obviously this is not a
+   * very robust solution, but much easier than the full CAS simplification.
+   * @param {Expression} expr1
+   * @param {Expression} expr2
+   * @returns {boolean}
+   */
+  static numEquals(expr1, expr2) {
+    const vars = unique([...expr1.variables, ...expr2.variables]);
+
+    // We only test positive random numbers, because negative numbers raised
+    // to non-integer powers return NaN.
+    for (let i=0; i<5; ++i) {
+      const substitution = {};
+      for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
+      const a = expr1.evaluate(substitution);
+      const b = expr2.evaluate(substitution);
+      if (!nearlyEquals(a, b)) return false;
+    }
+    return true;
+  }
 }
 
 // -----------------------------------------------------------------------------

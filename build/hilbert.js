@@ -129,6 +129,78 @@ function words(str) {
 
 // =============================================================================
 
+// ============================================================================
+// Fermat.js | Number Theory
+// (c) Mathigon
+// ============================================================================
+
+
+
+// -----------------------------------------------------------------------------
+// Simple Functions
+
+const tolerance = 0.000001;
+
+/**
+ * Checks if two numbers are nearly equals.
+ * @param {number} x
+ * @param {number} y
+ * @param {?number} t The allowed tolerance
+ * @returns {boolean}
+ */
+function nearlyEquals(x, y, t = tolerance) {
+  return Math.abs(x - y) < t;
+}
+
+// ============================================================================
+
+// =============================================================================
+
+// ============================================================================
+
+// =============================================================================
+
+// =============================================================================
+
+// =============================================================================
+
+// =============================================================================
+
+// =============================================================================
+
+// =============================================================================
+
+// =============================================================================
+
+const CONSTANTS = {
+  pi: Math.PI,
+  e: Math.E
+};
+
+// =============================================================================
+
+
+// -----------------------------------------------------------------------------
+// Angles
+
+const twoPi = 2 * Math.PI;
+
+// ============================================================================
+
+// ============================================================================
+
+// ============================================================================
+
+// =============================================================================
+
+// =============================================================================
+
+// ============================================================================
+
+// =============================================================================
+
+// =============================================================================
+
 // =============================================================================
 // Hilbert.js | Symbols
 // (c) Mathigon
@@ -136,7 +208,7 @@ function words(str) {
 
 
 
-const BRACKETS = {'(': ')', '[': ']', '{': '}', '|': '|'};
+const BRACKETS$1 = {'(': ')', '[': ']', '{': '}', '|': '|'};
 
 const SPECIAL_OPERATORS = {
   '*': '·',
@@ -231,15 +303,15 @@ const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
 // =============================================================================
 
 
-const PRECEDENCE = words('+ - * × · // ^');
+const PRECEDENCE$1 = words('+ - * × · // ^');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 
-function needsBrackets(expr, parentFn) {
-  if (!PRECEDENCE.includes(parentFn)) return false;
+function needsBrackets$1(expr, parentFn) {
+  if (!PRECEDENCE$1.includes(parentFn)) return false;
   if (expr instanceof ExprTerm) return true;
   if (!(expr instanceof ExprFunction)) return false;
-  if (!PRECEDENCE.includes(expr.fn)) return false;
-  return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr);
+  if (!PRECEDENCE$1.includes(expr.fn)) return false;
+  return PRECEDENCE$1.indexOf(parentFn) > PRECEDENCE$1.indexOf(expr);
 }
 
 function addRow(expr, string) {
@@ -261,7 +333,7 @@ class ExprFunction {
 
     switch(this.fn) {
       case '+': return args.reduce((a, b) => a + b, 0);
-      case '-': return (args.length > 1) ? args[1] - args[0] : -args[0];
+      case '-': return (args.length > 1) ? args[0] - args[1] : -args[0];
       case '*':
       case '·':
       case '×': return args.reduce((a, b) => a * b, 1);
@@ -273,6 +345,7 @@ class ExprFunction {
       case 'sup': return Math.pow(args[0], args[1]);
       case 'sqrt': return Math.sqrt(args[0]);
       case 'root': return Math.pow(args[0], 1 / args[1]);
+      case '(': return args[0];
       // TODO Implement for all functions
     }
 
@@ -297,7 +370,7 @@ class ExprFunction {
   }
 
   toString() {
-    const args = this.args.map(a => needsBrackets(a, this.fn) ?
+    const args = this.args.map(a => needsBrackets$1(a, this.fn) ?
         '(' + a.toString() + ')' : a.toString());
 
     if (this.fn === '-')
@@ -307,7 +380,7 @@ class ExprFunction {
       return args.join(' ' + this.fn + ' ');
 
     if (isOneOf(this.fn, '(', '[', '{'))
-      return this.fn + this.args.join(', ') + BRACKETS[this.fn];
+      return this.fn + this.args.join(', ') + BRACKETS$1[this.fn];
 
     if (isOneOf(this.fn, '!', '%')) return args[0] + this.fn;
 
@@ -316,7 +389,7 @@ class ExprFunction {
   }
 
   toMathML(custom={}) {
-    const args = this.args.map(a => needsBrackets(a, this.fn) ?
+    const args = this.args.map(a => needsBrackets$1(a, this.fn) ?
         '<mfenced>' + a.toMathML() + '</mfenced>' : a.toMathML());
 
     if (this.fn in custom) return custom[this.fn](...args);
@@ -328,7 +401,13 @@ class ExprFunction {
       return args.join(`<mo value="${this.fn}">${this.fn}</mo>`);
 
     if (isOneOf(this.fn, '*', '×', '·')) {
-      return args.join('');
+      let str = args[0];
+      for (let i = 1; i < args.length - 1; ++i) {
+        // We only show the × symbol between consecutive numbers.
+        const showTimes = (this.args[0] instanceof ExprNumber && this.args[1] instanceof ExprNumber);
+        str += (showTimes ? `<mo value="×">×</mo>` : '') + args[1];
+      }
+      return str;
     }
 
     if (this.fn === 'sqrt') return `<msqrt>${args[0]}</msqrt>`;
@@ -340,7 +419,7 @@ class ExprFunction {
     }
 
     if (isOneOf(this.fn, '(', '[', '{'))
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${args.join(COMMA)}</mfenced>`;
+      return `<mfenced open="${this.fn}" close="${BRACKETS$1[this.fn]}">${args.join(COMMA)}</mfenced>`;
 
     if (isOneOf(this.fn, '!', '%'))
       return args[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
@@ -454,7 +533,7 @@ function removeBrackets(expr) {
   return (expr instanceof ExprFunction && expr.fn === '(') ? expr.args[0] : expr;
 }
 
-function findBinaryFunction(tokens, fn, toFn) {
+function findBinaryFunction$1(tokens, fn, toFn) {
   if (isOperator(tokens[0], fn) || isOperator(tokens[tokens.length - 1], fn))
     throw ExprError.startingOperator(fn);
 
@@ -478,13 +557,13 @@ function findBinaryFunction(tokens, fn, toFn) {
 
 function prepareTerm(tokens) {
   // TODO Combine sup and sub calls into a single supsub function.
-  findBinaryFunction(tokens, '^', 'sup');
-  findBinaryFunction(tokens, '/');
+  findBinaryFunction$1(tokens, '^', 'sup');
+  findBinaryFunction$1(tokens, '/');
   return makeTerm(tokens);
 }
 
-function matchBrackets(tokens) {
-  findBinaryFunction(tokens, '_', 'sub');
+function matchBrackets$1(tokens) {
+  findBinaryFunction$1(tokens, '_', 'sub');
   const stack = [[]];
 
   for (let t of tokens) {
@@ -492,7 +571,7 @@ function matchBrackets(tokens) {
 
     if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
 
-      if (!isOperator(t, BRACKETS[lastOpen]))
+      if (!isOperator(t, BRACKETS$1[lastOpen]))
         throw ExprError.conflictingBrackets(t.o);
 
       const closed = stack.pop();
@@ -522,18 +601,69 @@ function matchBrackets(tokens) {
 // -----------------------------------------------------------------------------
 // Collapse term items
 
+function findAssociativeFunction(tokens, symbol, implicit=false) {
+  const result = [];
+  let buffer = [];
+  let lastWasSymbol = false;
+
+  function clearBuffer() {
+    if (!buffer.length) return;
+    result.push(buffer.length > 1 ? new ExprFunction(symbol[0], buffer) : buffer[0]);
+    buffer = [];
+  }
+
+  for (let t of tokens) {
+    if (isOperator(t, symbol)) {
+      if (lastWasSymbol || !buffer.length) throw ExprError.invalidExpression();
+      lastWasSymbol = true;
+    } else if (t instanceof ExprOperator) {
+      clearBuffer();
+      result.push(t);
+      lastWasSymbol = false;
+    } else {
+      // If implicit=true, we allow implicit multiplication, except where the
+      // second factor is a number. For example, "3 5" is invalid.
+      const noImplicit = (!implicit || t instanceof ExprNumber);
+      if (buffer.length && !lastWasSymbol && noImplicit) throw ExprError.invalidExpression();
+      buffer.push(t);
+      lastWasSymbol = false;
+    }
+  }
+
+  if (lastWasSymbol) throw ExprError.invalidExpression();
+  clearBuffer();
+  return result;
+}
+
 function collapseTerm(tokens) {
-  findBinaryFunction(tokens, '= < > ≤ ≥');
-  findBinaryFunction(tokens, '//', '/');
+  // Filter out whitespace.
+  tokens = tokens.filter(t => !(t instanceof ExprSpace));
+  if (!tokens.length) throw ExprError.invalidExpression();
 
-  // TODO Match multiplication and implicit multiplication
+  // Match percentage and factorial operators.
+  if (isOperator(tokens[0], '%!')) throw ExprError.startingOperator(tokens[0].o);
+  for (let i = 0; i < tokens.length; ++i) {
+    if (!isOperator(tokens[i], '%!')) continue;
+    tokens.splice(i - 1, 2, new ExprFunction(tokens[i].o, [tokens[i - 1]]));
+    i -= 1;
+  }
 
-  // TODO Match starting - or ±
+  // Match comparison and division operators.
+  findBinaryFunction$1(tokens, '= < > ≤ ≥');
+  findBinaryFunction$1(tokens, '//', '/');
 
-  findBinaryFunction(tokens, '-', '-');
-  findBinaryFunction(tokens, '±', '±');
+  // Match multiplication operators.
+  tokens = findAssociativeFunction(tokens, '* × ·', true);
 
-  // TODO Match addition
+  // Match - and ± operators.
+  if (isOperator(tokens[0], '- ±')) {
+    tokens.splice(0, 2, new ExprFunction(tokens[0].o, [tokens[1]]));
+  }
+  findBinaryFunction$1(tokens, '- ±');
+
+  // Match + operators.
+  if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
+  tokens = findAssociativeFunction(tokens, '+');
 
   if (tokens.length > 1) throw ExprError.invalidExpression();
   return tokens[0];
@@ -542,22 +672,22 @@ function collapseTerm(tokens) {
 // =============================================================================
 
 
-const CONSTANTS = {
-  pi: Math.PI,
+const CONSTANTS$1 = {
+  π: Math.PI,
   e: Math.E
 };
 
 /**
  * Maths Expression
  */
-class Expression {
+class Expression$1 {
 
   /**
    * Parses a string to an expression.
    * @param {string} str
    * @returns {Expression}
    */
-  static parse(str) { return matchBrackets(tokenize(str)) }
+  static parse(str) { return matchBrackets$1(tokenize(str)) }
 
   /**
    * Evaluates an expression using a given map of variables and functions.
@@ -603,23 +733,45 @@ class Expression {
    * @returns {string}
    */
   toMathML(_custom={}) { return ''; }
+
+  /**
+   * Checks numerically if two expressions are equal. Obviously this is not a
+   * very robust solution, but much easier than the full CAS simplification.
+   * @param {Expression} expr1
+   * @param {Expression} expr2
+   * @returns {boolean}
+   */
+  static numEquals(expr1, expr2) {
+    const vars = unique([...expr1.variables, ...expr2.variables]);
+
+    // We only test positive random numbers, because negative numbers raised
+    // to non-integer powers return NaN.
+    for (let i=0; i<5; ++i) {
+      const substitution = {};
+      for (let v of vars) substitution[v] = CONSTANTS$1[v] || Math.random() * 5;
+      const a = expr1.evaluate(substitution);
+      const b = expr2.evaluate(substitution);
+      if (!nearlyEquals(a, b)) return false;
+    }
+    return true;
+  }
 }
 
 // -----------------------------------------------------------------------------
 
-class ExprNumber extends Expression {
+class ExprNumber extends Expression$1 {
   constructor(n) { super(); this.n = n; }
   evaluate() { return this.n; }
   toString() { return '' + this.n; }
   toMathML() { return `<mn>${this.n}</mn>`; }
 }
 
-class ExprIdentifier extends Expression {
+class ExprIdentifier extends Expression$1 {
   constructor(i) { super(); this.i = i; }
 
   evaluate(vars={}) {
     if (this.i in vars) return vars[this.i];
-    if (this.i in CONSTANTS) return CONSTANTS[this.i];
+    if (this.i in CONSTANTS$1) return CONSTANTS$1[this.i];
     throw ExprError.undefinedVariable(this.i);
   }
 
@@ -629,7 +781,7 @@ class ExprIdentifier extends Expression {
   toMathML() { return `<mi>${this.i}</mi>`; }
 }
 
-class ExprString extends Expression {
+class ExprString extends Expression$1 {
   constructor(s) { super(); this.s = s; }
   evaluate() { throw ExprError.undefinedVariable(this.s); }
   toString() { return '"' + this.s + '"'; }
@@ -647,7 +799,7 @@ class ExprOperator {
   toMathML() { return `<mo value="${this.toString()}">${this.toString()}</mo>`; }
 }
 
-class ExprTerm extends Expression {
+class ExprTerm extends Expression$1 {
   constructor(items) { super(); this.items = items; }
   evaluate(vars={}) { return this.toFunction().evaluate(vars); }
   substitute(vars={}) { return this.toFunction().substitute(vars); }
@@ -662,4 +814,4 @@ class ExprTerm extends Expression {
 // =============================================================================
 
 exports.ExprError = ExprError;
-exports.Expression = Expression;
+exports.Expression = Expression$1;

@@ -7,7 +7,7 @@
 
 import { unique, flatten, words, isOneOf } from '@mathigon/core'
 import { BRACKETS } from './symbols'
-import { ExprTerm } from './expression'
+import { ExprTerm, ExprNumber } from './expression'
 import { ExprError } from './errors'
 
 
@@ -41,7 +41,7 @@ export class ExprFunction {
 
     switch(this.fn) {
       case '+': return args.reduce((a, b) => a + b, 0);
-      case '-': return (args.length > 1) ? args[1] - args[0] : -args[0];
+      case '-': return (args.length > 1) ? args[0] - args[1] : -args[0];
       case '*':
       case '·':
       case '×': return args.reduce((a, b) => a * b, 1);
@@ -53,6 +53,7 @@ export class ExprFunction {
       case 'sup': return Math.pow(args[0], args[1]);
       case 'sqrt': return Math.sqrt(args[0]);
       case 'root': return Math.pow(args[0], 1 / args[1]);
+      case '(': return args[0];
       // TODO Implement for all functions
     }
 
@@ -108,8 +109,13 @@ export class ExprFunction {
       return args.join(`<mo value="${this.fn}">${this.fn}</mo>`);
 
     if (isOneOf(this.fn, '*', '×', '·')) {
-      const showTimes = false;  // TODO Decide when to show times symbol.
-      return args.join(showTimes ? `<mo value="×">×</mo>` : '');
+      let str = args[0];
+      for (let i = 1; i < args.length - 1; ++i) {
+        // We only show the × symbol between consecutive numbers.
+        const showTimes = (this.args[0] instanceof ExprNumber && this.args[1] instanceof ExprNumber);
+        str += (showTimes ? `<mo value="×">×</mo>` : '') + args[1];
+      }
+      return str;
     }
 
     if (this.fn === 'sqrt') return `<msqrt>${args[0]}</msqrt>`;

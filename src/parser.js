@@ -181,18 +181,69 @@ export function matchBrackets(tokens) {
 // -----------------------------------------------------------------------------
 // Collapse term items
 
+function findAssociativeFunction(tokens, symbol, implicit=false) {
+  const result = [];
+  let buffer = [];
+  let lastWasSymbol = false;
+
+  function clearBuffer() {
+    if (!buffer.length) return;
+    result.push(buffer.length > 1 ? new ExprFunction(symbol[0], buffer) : buffer[0]);
+    buffer = [];
+  }
+
+  for (let t of tokens) {
+    if (isOperator(t, symbol)) {
+      if (lastWasSymbol || !buffer.length) throw ExprError.invalidExpression();
+      lastWasSymbol = true;
+    } else if (t instanceof ExprOperator) {
+      clearBuffer();
+      result.push(t);
+      lastWasSymbol = false;
+    } else {
+      // If implicit=true, we allow implicit multiplication, except where the
+      // second factor is a number. For example, "3 5" is invalid.
+      const noImplicit = (!implicit || t instanceof ExprNumber);
+      if (buffer.length && !lastWasSymbol && noImplicit) throw ExprError.invalidExpression();
+      buffer.push(t);
+      lastWasSymbol = false;
+    }
+  }
+
+  if (lastWasSymbol) throw ExprError.invalidExpression();
+  clearBuffer();
+  return result;
+}
+
 export function collapseTerm(tokens) {
+  // Filter out whitespace.
+  tokens = tokens.filter(t => !(t instanceof ExprSpace));
+  if (!tokens.length) throw ExprError.invalidExpression();
+
+  // Match percentage and factorial operators.
+  if (isOperator(tokens[0], '%!')) throw ExprError.startingOperator(tokens[0].o);
+  for (let i = 0; i < tokens.length; ++i) {
+    if (!isOperator(tokens[i], '%!')) continue;
+    tokens.splice(i - 1, 2, new ExprFunction(tokens[i].o, [tokens[i - 1]]));
+    i -= 1;
+  }
+
+  // Match comparison and division operators.
   findBinaryFunction(tokens, '= < > ≤ ≥');
   findBinaryFunction(tokens, '//', '/');
 
-  // TODO Match multiplication and implicit multiplication
+  // Match multiplication operators.
+  tokens = findAssociativeFunction(tokens, '* × ·', true);
 
-  // TODO Match starting - or ±
+  // Match - and ± operators.
+  if (isOperator(tokens[0], '- ±')) {
+    tokens.splice(0, 2, new ExprFunction(tokens[0].o, [tokens[1]]));
+  }
+  findBinaryFunction(tokens, '- ±');
 
-  findBinaryFunction(tokens, '-', '-');
-  findBinaryFunction(tokens, '±', '±');
-
-  // TODO Match addition
+  // Match + operators.
+  if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
+  tokens = findAssociativeFunction(tokens, '+');
 
   if (tokens.length > 1) throw ExprError.invalidExpression();
   return tokens[0];
