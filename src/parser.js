@@ -7,7 +7,7 @@
 
 import { last, words } from '@mathigon/core'
 import { SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, BRACKETS } from './symbols'
-import { ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprTerm } from "./expression";
+import { ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprTerm } from "./elements";
 import { ExprFunction } from "./functions";
 import { ExprError } from "./errors";
 
@@ -114,8 +114,8 @@ function removeBrackets(expr) {
 }
 
 function findBinaryFunction(tokens, fn, toFn) {
-  if (isOperator(tokens[0], fn) || isOperator(tokens[tokens.length - 1], fn))
-    throw ExprError.startingOperator(fn);
+  if (isOperator(tokens[0], fn)) throw ExprError.startOperator(tokens[0]);
+  if (isOperator(last(tokens), fn)) throw ExprError.endOperator(last(tokens));
 
   for (let i = 1; i < tokens.length - 1; ++i) {
     if (!isOperator(tokens[i], fn)) continue;
@@ -221,7 +221,7 @@ export function collapseTerm(tokens) {
   if (!tokens.length) throw ExprError.invalidExpression();
 
   // Match percentage and factorial operators.
-  if (isOperator(tokens[0], '%!')) throw ExprError.startingOperator(tokens[0].o);
+  if (isOperator(tokens[0], '%!')) throw ExprError.startOperator(tokens[0].o);
   for (let i = 0; i < tokens.length; ++i) {
     if (!isOperator(tokens[i], '%!')) continue;
     tokens.splice(i - 1, 2, new ExprFunction(tokens[i].o, [tokens[i - 1]]));
@@ -236,10 +236,10 @@ export function collapseTerm(tokens) {
   tokens = findAssociativeFunction(tokens, '* × ·', true);
 
   // Match - and ± operators.
-  if (isOperator(tokens[0], '- ±')) {
+  if (isOperator(tokens[0], '− ±')) {
     tokens.splice(0, 2, new ExprFunction(tokens[0].o, [tokens[1]]));
   }
-  findBinaryFunction(tokens, '- ±');
+  findBinaryFunction(tokens, '− ±');
 
   // Match + operators.
   if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);

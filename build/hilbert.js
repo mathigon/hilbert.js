@@ -47,8 +47,12 @@ class ExprError extends Error {
     return new ExprError('SyntaxError', `Unclosed bracket “${x}”.`);
   }
 
-  static startingOperator(x) {
-    return new ExprError('SyntaxError', `A term cannot start or end with a “${x}”.`);
+  static startOperator(x) {
+    return new ExprError('SyntaxError', `A term cannot start with a “${x}”.`);
+  }
+
+  static endOperator(x) {
+    return new ExprError('SyntaxError', `A term cannot end with a “${x}”.`);
   }
 
   static consecutiveOperators(x, y) {
@@ -74,6 +78,26 @@ function isOneOf(x, ...values) {
     if (x === v) return true;
   }
   return false;
+}
+
+
+/**
+ * Function wrapper that modifies a function to cache its return values. This
+ * is useful for performance intensive functions which are called repeatedly
+ * with the same arguments. However it can reduce performance for functions
+ * which are always called with different arguments. Note that argument
+ * comparison doesn't not work with Objects or nested arrays.
+
+ * @param {Function} fn
+ * @returns {Function}
+ */
+function cache(fn) {
+  let cached = new Map();
+  return function(...args) {
+    let argString = args.join('--');
+    if (!cached.has(argString)) cached.set(argString, fn(...args));
+    return cached.get(argString);
+  };
 }
 
 // =============================================================================
@@ -108,6 +132,16 @@ function unique(array) {
 function flatten(array) {
   return array.reduce((a, b) =>
     a.concat(Array.isArray(b) ? flatten(b) : b), []);
+}
+
+
+/**
+ * Join multiple Arrays
+ * @param {*[]...} arrays
+ * @returns {*[]}
+ */
+function join(...arrays) {
+  return [].concat(...arrays);
 }
 
 // =============================================================================
@@ -172,13 +206,6 @@ function nearlyEquals(x, y, t = tolerance) {
 
 // =============================================================================
 
-const CONSTANTS = {
-  pi: Math.PI,
-  e: Math.E
-};
-
-// =============================================================================
-
 
 // -----------------------------------------------------------------------------
 // Angles
@@ -208,13 +235,21 @@ const twoPi = 2 * Math.PI;
 
 
 
-const BRACKETS$1 = {'(': ')', '[': ']', '{': '}', '|': '|'};
+const CONSTANTS = {
+  pi: Math.PI,
+  π: Math.PI,
+  e: Math.E
+};
+
+const BRACKETS = {'(': ')', '[': ']', '{': '}', '|': '|'};
 
 const SPECIAL_OPERATORS = {
   '*': '·',
   '**': '∗',
   '//': '//',
   '+-': '±',
+  '–': '−',
+  '-': '−',
   xx: '×',
   sum: '∑',
   prod: '∏',
@@ -296,22 +331,138 @@ const UPPERCASE = ALPHABET.toUpperCase().split('');
 const GREEK = Object.values(SPECIAL_IDENTIFIERS);
 const IDENTIFIER_SYMBOLS = [...LOWERCASE, ...UPPERCASE, ...GREEK];
 
-const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–~^_…';
+const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
 
 // =============================================================================
 
 
-const PRECEDENCE$1 = words('+ - * × · // ^');
+
+/**
+ * Maths Expression
+ */
+class ExprElement {
+
+  /**
+   * Evaluates an expression using a given map of variables and functions.
+   * @param {Object.<String, Expression>=} _vars
+   * @returns {number|null}
+   */
+  evaluate(_vars={}) { return null; }
+
+  /**
+   * Substitutes a new expression for a variable.
+   * @param {Object.<String, Expression>=} _vars
+   * @returns {Expression}
+   */
+  substitute(_vars={}) { return this; }
+
+  /**
+   * Returns the simplest mathematically equivalent expression.
+   * @returns {Expression}
+   */
+  get simplified() { return this; }
+
+  /**
+   * Returns a list of all variables used in the expression.
+   * @returns {String[]}
+   */
+  get variables() { return []; }
+
+  /**
+   * Returns a list of all functions called by the expression.
+   * @returns {String[]}
+   */
+  get functions() { return []; }
+
+  /**
+   * Collapses all terms into functions.
+   * @returns {Expression}
+   */
+  collapse() { return this; }
+
+  /**
+   * Converts the expression to a plain text string.
+   * @returns {string}
+   */
+  toString() { return ''; }
+
+  /**
+   * Converts the expression to a MathML string.
+   * @param {Object.<String, Function>=} _custom
+   * @returns {string}
+   */
+  toMathML(_custom={}) { return ''; }
+}
+
+// -----------------------------------------------------------------------------
+
+class ExprNumber extends ExprElement {
+  constructor(n) { super(); this.n = n; }
+  evaluate() { return this.n; }
+  toString() { return '' + this.n; }
+  toMathML() { return `<mn>${this.n}</mn>`; }
+}
+
+class ExprIdentifier extends ExprElement {
+  constructor(i) { super(); this.i = i; }
+
+  evaluate(vars={}) {
+    if (this.i in vars) return vars[this.i];
+    if (this.i in CONSTANTS) return CONSTANTS[this.i];
+    throw ExprError.undefinedVariable(this.i);
+  }
+
+  substitute(vars={}) { return vars[this.i] || this; }
+  get variables() { return [this.i]; }
+  toString() { return this.i; }
+  toMathML() { return `<mi>${this.i}</mi>`; }
+}
+
+class ExprString extends ExprElement {
+  constructor(s) { super(); this.s = s; }
+  evaluate() { throw ExprError.undefinedVariable(this.s); }
+  toString() { return '"' + this.s + '"'; }
+  toMathML() { return `<mtext>${this.s}</mtext>`; }
+}
+
+class ExprSpace extends ExprElement {
+  toString() { return ' '; }
+  toMathML() { return `<mspace/>`; }
+}
+
+class ExprOperator extends ExprElement {
+  constructor(o) { super(); this.o = o; }
+  toString() { return this.o.replace('//', '/'); }
+  toMathML() { return `<mo value="${this.toString()}">${this.toString()}</mo>`; }
+  get functions() { return [this.o]; }
+}
+
+class ExprTerm extends ExprElement {
+  constructor(items) { super(); this.items = items; }
+  evaluate(vars={}) { return this.collapse().evaluate(vars); }
+  substitute(vars={}) { return this.collapse().substitute(vars); }
+  get simplified() { return this.collapse().simplified; }
+  get variables() { return unique(join(...this.items.map(i => i.variables))); }
+  get functions() { return unique(join(...this.items.map(i => i.functions))); }
+  toString() { return this.items.map(i => i.toString()).join(' '); }
+  toMathML(custom={}) { return this.items.map(i => i.toMathML(custom)).join(''); }
+  collapse() { return collapseTerm(this.items).collapse(); }
+}
+
+// =============================================================================
+
+
+const PRECEDENCE = words('+ − * × · // ^');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 
-function needsBrackets$1(expr, parentFn) {
-  if (!PRECEDENCE$1.includes(parentFn)) return false;
+function needsBrackets(expr, parentFn) {
+  if (!PRECEDENCE.includes(parentFn)) return false;
   if (expr instanceof ExprTerm) return true;
   if (!(expr instanceof ExprFunction)) return false;
-  if (!PRECEDENCE$1.includes(expr.fn)) return false;
-  return PRECEDENCE$1.indexOf(parentFn) > PRECEDENCE$1.indexOf(expr);
+  if (!PRECEDENCE.includes(expr.fn)) return false;
+  return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr);
 }
 
 function addRow(expr, string) {
@@ -320,9 +471,10 @@ function addRow(expr, string) {
 }
 
 
-class ExprFunction {
+class ExprFunction extends ExprElement {
 
   constructor(fn, args=[]) {
+    super();
     this.fn = fn;
     this.args = args;
   }
@@ -333,7 +485,7 @@ class ExprFunction {
 
     switch(this.fn) {
       case '+': return args.reduce((a, b) => a + b, 0);
-      case '-': return (args.length > 1) ? args[0] - args[1] : -args[0];
+      case '−': return (args.length > 1) ? args[0] - args[1] : -args[0];
       case '*':
       case '·':
       case '×': return args.reduce((a, b) => a * b, 1);
@@ -356,6 +508,10 @@ class ExprFunction {
     return new ExprFunction(this.fn, this.args.map(a => a.substitute(vars)));
   }
 
+  collapse() {
+    return new ExprFunction(this.fn, this.args.map(a => a.collapse()));
+  }
+
   get simplified() {
     // TODO Write CAS simplification algorithms
     return this;
@@ -370,17 +526,19 @@ class ExprFunction {
   }
 
   toString() {
-    const args = this.args.map(a => needsBrackets$1(a, this.fn) ?
+    const args = this.args.map(a => needsBrackets(a, this.fn) ?
         '(' + a.toString() + ')' : a.toString());
 
-    if (this.fn === '-')
-      return args.length > 1 ? args.join(' – ') : '-' + args[0];
+    if (this.fn === '−')
+      return args.length > 1 ? args.join(' − ') : '−' + args[0];
+
+    if (this.fn === '^') return args.join('^');
 
     if (words('+ * × · / sup = < > ≤ ≥').includes(this.fn))
       return args.join(' ' + this.fn + ' ');
 
     if (isOneOf(this.fn, '(', '[', '{'))
-      return this.fn + this.args.join(', ') + BRACKETS$1[this.fn];
+      return this.fn + this.args.join(', ') + BRACKETS[this.fn];
 
     if (isOneOf(this.fn, '!', '%')) return args[0] + this.fn;
 
@@ -389,13 +547,13 @@ class ExprFunction {
   }
 
   toMathML(custom={}) {
-    const args = this.args.map(a => needsBrackets$1(a, this.fn) ?
+    const args = this.args.map(a => needsBrackets(a, this.fn) ?
         '<mfenced>' + a.toMathML() + '</mfenced>' : a.toMathML());
 
     if (this.fn in custom) return custom[this.fn](...args);
 
-    if (this.fn === '-') return args.length > 1 ?
-        args.join('<mo value="-">–</mo>') : '<mo rspace="0" value="-">–</mo>' + args[0];
+    if (this.fn === '−') return args.length > 1 ?
+        args.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + args[0];
 
     if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥'))
       return args.join(`<mo value="${this.fn}">${this.fn}</mo>`);
@@ -419,7 +577,7 @@ class ExprFunction {
     }
 
     if (isOneOf(this.fn, '(', '[', '{'))
-      return `<mfenced open="${this.fn}" close="${BRACKETS$1[this.fn]}">${args.join(COMMA)}</mfenced>`;
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${args.join(COMMA)}</mfenced>`;
 
     if (isOneOf(this.fn, '!', '%'))
       return args[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
@@ -533,9 +691,9 @@ function removeBrackets(expr) {
   return (expr instanceof ExprFunction && expr.fn === '(') ? expr.args[0] : expr;
 }
 
-function findBinaryFunction$1(tokens, fn, toFn) {
-  if (isOperator(tokens[0], fn) || isOperator(tokens[tokens.length - 1], fn))
-    throw ExprError.startingOperator(fn);
+function findBinaryFunction(tokens, fn, toFn) {
+  if (isOperator(tokens[0], fn)) throw ExprError.startOperator(tokens[0]);
+  if (isOperator(last(tokens), fn)) throw ExprError.endOperator(last(tokens));
 
   for (let i = 1; i < tokens.length - 1; ++i) {
     if (!isOperator(tokens[i], fn)) continue;
@@ -557,13 +715,13 @@ function findBinaryFunction$1(tokens, fn, toFn) {
 
 function prepareTerm(tokens) {
   // TODO Combine sup and sub calls into a single supsub function.
-  findBinaryFunction$1(tokens, '^', 'sup');
-  findBinaryFunction$1(tokens, '/');
+  findBinaryFunction(tokens, '^', 'sup');
+  findBinaryFunction(tokens, '/');
   return makeTerm(tokens);
 }
 
-function matchBrackets$1(tokens) {
-  findBinaryFunction$1(tokens, '_', 'sub');
+function matchBrackets(tokens) {
+  findBinaryFunction(tokens, '_', 'sub');
   const stack = [[]];
 
   for (let t of tokens) {
@@ -571,7 +729,7 @@ function matchBrackets$1(tokens) {
 
     if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
 
-      if (!isOperator(t, BRACKETS$1[lastOpen]))
+      if (!isOperator(t, BRACKETS[lastOpen]))
         throw ExprError.conflictingBrackets(t.o);
 
       const closed = stack.pop();
@@ -641,7 +799,7 @@ function collapseTerm(tokens) {
   if (!tokens.length) throw ExprError.invalidExpression();
 
   // Match percentage and factorial operators.
-  if (isOperator(tokens[0], '%!')) throw ExprError.startingOperator(tokens[0].o);
+  if (isOperator(tokens[0], '%!')) throw ExprError.startOperator(tokens[0].o);
   for (let i = 0; i < tokens.length; ++i) {
     if (!isOperator(tokens[i], '%!')) continue;
     tokens.splice(i - 1, 2, new ExprFunction(tokens[i].o, [tokens[i - 1]]));
@@ -649,17 +807,17 @@ function collapseTerm(tokens) {
   }
 
   // Match comparison and division operators.
-  findBinaryFunction$1(tokens, '= < > ≤ ≥');
-  findBinaryFunction$1(tokens, '//', '/');
+  findBinaryFunction(tokens, '= < > ≤ ≥');
+  findBinaryFunction(tokens, '//', '/');
 
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '* × ·', true);
 
   // Match - and ± operators.
-  if (isOperator(tokens[0], '- ±')) {
+  if (isOperator(tokens[0], '− ±')) {
     tokens.splice(0, 2, new ExprFunction(tokens[0].o, [tokens[1]]));
   }
-  findBinaryFunction$1(tokens, '- ±');
+  findBinaryFunction(tokens, '− ±');
 
   // Match + operators.
   if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
@@ -672,146 +830,48 @@ function collapseTerm(tokens) {
 // =============================================================================
 
 
-const CONSTANTS$1 = {
-  π: Math.PI,
-  e: Math.E
-};
 
 /**
- * Maths Expression
+ * Parses a string to an expression.
+ * @param {string} str
+ * @param {boolean} collapse
+ * @returns {Expression}
  */
-class Expression$1 {
+function parse(str, collapse = false) {
+  const expr =  matchBrackets(tokenize(str));
+  return collapse ? expr.collapse() : expr;
+}
 
-  /**
-   * Parses a string to an expression.
-   * @param {string} str
-   * @returns {Expression}
-   */
-  static parse(str) { return matchBrackets$1(tokenize(str)) }
+/**
+ * Checks numerically if two expressions are equal. Obviously this is not a
+ * very robust solution, but much easier than the full CAS simplification.
+ * @param {Expression} expr1
+ * @param {Expression} expr2
+ * @returns {boolean}
+ */
+function numEquals(expr1, expr2) {
+  const vars = unique([...expr1.variables, ...expr2.variables]);
+  const fn1 = expr1.collapse();
+  const fn2 = expr2.collapse();
 
-  /**
-   * Evaluates an expression using a given map of variables and functions.
-   * @param {Object.<String, Expression>=} _vars
-   * @returns {number|null}
-   */
-  evaluate(_vars={}) { return null; }
-
-  /**
-   * Substitutes a new expression for a variable.
-   * @param {Object.<String, Expression>=} _vars
-   * @returns {Expression}
-   */
-  substitute(_vars={}) { return this; }
-
-  /**
-   * Returns the simplest mathematically equivalent expression.
-   * @returns {Expression}
-   */
-  get simplified() { return this; }
-
-  /**
-   * Returns a list of all variables used in the expression.
-   * @returns {String[]}
-   */
-  get variables() { return []; }
-
-  /**
-   * Returns a list of all functions called by the expression.
-   * @returns {String[]}
-   */
-  get functions() { return []; }
-
-  /**
-   * Converts the expression to a plain text string.
-   * @returns {string}
-   */
-  toString() { return ''; }
-
-  /**
-   * Converts the expression to a MathML string.
-   * @param {Object.<String, Function>=} _custom
-   * @returns {string}
-   */
-  toMathML(_custom={}) { return ''; }
-
-  /**
-   * Checks numerically if two expressions are equal. Obviously this is not a
-   * very robust solution, but much easier than the full CAS simplification.
-   * @param {Expression} expr1
-   * @param {Expression} expr2
-   * @returns {boolean}
-   */
-  static numEquals(expr1, expr2) {
-    const vars = unique([...expr1.variables, ...expr2.variables]);
-
-    // We only test positive random numbers, because negative numbers raised
-    // to non-integer powers return NaN.
-    for (let i=0; i<5; ++i) {
-      const substitution = {};
-      for (let v of vars) substitution[v] = CONSTANTS$1[v] || Math.random() * 5;
-      const a = expr1.evaluate(substitution);
-      const b = expr2.evaluate(substitution);
-      if (!nearlyEquals(a, b)) return false;
-    }
-    return true;
+  // We only test positive random numbers, because negative numbers raised
+  // to non-integer powers return NaN.
+  for (let i = 0; i < 5; ++i) {
+    const substitution = {};
+    for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
+    const a = fn1.evaluate(substitution);
+    const b = fn2.evaluate(substitution);
+    if (!nearlyEquals(a, b)) return false;
   }
+  return true;
 }
 
-// -----------------------------------------------------------------------------
-
-class ExprNumber extends Expression$1 {
-  constructor(n) { super(); this.n = n; }
-  evaluate() { return this.n; }
-  toString() { return '' + this.n; }
-  toMathML() { return `<mn>${this.n}</mn>`; }
-}
-
-class ExprIdentifier extends Expression$1 {
-  constructor(i) { super(); this.i = i; }
-
-  evaluate(vars={}) {
-    if (this.i in vars) return vars[this.i];
-    if (this.i in CONSTANTS$1) return CONSTANTS$1[this.i];
-    throw ExprError.undefinedVariable(this.i);
-  }
-
-  substitute(vars={}) { return vars[this.i] || this; }
-  get variables() { return [this.i]; }
-  toString() { return this.i; }
-  toMathML() { return `<mi>${this.i}</mi>`; }
-}
-
-class ExprString extends Expression$1 {
-  constructor(s) { super(); this.s = s; }
-  evaluate() { throw ExprError.undefinedVariable(this.s); }
-  toString() { return '"' + this.s + '"'; }
-  toMathML() { return `<mtext>${this.s}</mtext>`; }
-}
-
-class ExprSpace {
-  toString() { return ' '; }
-  toMathML() { return `<mspace/>`; }
-}
-
-class ExprOperator {
-  constructor(o) { this.o = o; }
-  toString() { return this.o.replace('//', '/'); }
-  toMathML() { return `<mo value="${this.toString()}">${this.toString()}</mo>`; }
-}
-
-class ExprTerm extends Expression$1 {
-  constructor(items) { super(); this.items = items; }
-  evaluate(vars={}) { return this.toFunction().evaluate(vars); }
-  substitute(vars={}) { return this.toFunction().substitute(vars); }
-  get simplified() { return this.toFunction().variables; }
-  get variables() { return this.toFunction().variables; }
-  get functions() { return this.toFunction().functions; }
-  toString() { return this.items.map(i => i.toString()).join(' '); }
-  toMathML(custom={}) { return this.items.map(i => i.toMathML(custom)).join(''); }
-  toFunction() { return collapseTerm(this.items); }
-}
+const Expression = {
+  numEquals,
+  parse: cache(parse)
+};
 
 // =============================================================================
 
 exports.ExprError = ExprError;
-exports.Expression = Expression$1;
+exports.Expression = Expression;

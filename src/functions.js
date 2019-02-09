@@ -7,11 +7,11 @@
 
 import { unique, flatten, words, isOneOf } from '@mathigon/core'
 import { BRACKETS } from './symbols'
-import { ExprTerm, ExprNumber } from './expression'
+import { ExprElement, ExprTerm, ExprNumber } from './elements'
 import { ExprError } from './errors'
 
 
-const PRECEDENCE = words('+ - * × · // ^');
+const PRECEDENCE = words('+ − * × · // ^');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 
 function needsBrackets(expr, parentFn) {
@@ -28,9 +28,10 @@ function addRow(expr, string) {
 }
 
 
-export class ExprFunction {
+export class ExprFunction extends ExprElement {
 
   constructor(fn, args=[]) {
+    super();
     this.fn = fn;
     this.args = args;
   }
@@ -41,7 +42,7 @@ export class ExprFunction {
 
     switch(this.fn) {
       case '+': return args.reduce((a, b) => a + b, 0);
-      case '-': return (args.length > 1) ? args[0] - args[1] : -args[0];
+      case '−': return (args.length > 1) ? args[0] - args[1] : -args[0];
       case '*':
       case '·':
       case '×': return args.reduce((a, b) => a * b, 1);
@@ -64,6 +65,10 @@ export class ExprFunction {
     return new ExprFunction(this.fn, this.args.map(a => a.substitute(vars)));
   }
 
+  collapse() {
+    return new ExprFunction(this.fn, this.args.map(a => a.collapse()));
+  }
+
   get simplified() {
     // TODO Write CAS simplification algorithms
     return this;
@@ -81,8 +86,10 @@ export class ExprFunction {
     const args = this.args.map(a => needsBrackets(a, this.fn) ?
         '(' + a.toString() + ')' : a.toString());
 
-    if (this.fn === '-')
-      return args.length > 1 ? args.join(' – ') : '-' + args[0];
+    if (this.fn === '−')
+      return args.length > 1 ? args.join(' − ') : '−' + args[0];
+
+    if (this.fn === '^') return args.join('^');
 
     if (words('+ * × · / sup = < > ≤ ≥').includes(this.fn))
       return args.join(' ' + this.fn + ' ');
@@ -102,8 +109,8 @@ export class ExprFunction {
 
     if (this.fn in custom) return custom[this.fn](...args);
 
-    if (this.fn === '-') return args.length > 1 ?
-        args.join('<mo value="-">–</mo>') : '<mo rspace="0" value="-">–</mo>' + args[0];
+    if (this.fn === '−') return args.length > 1 ?
+        args.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + args[0];
 
     if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥'))
       return args.join(`<mo value="${this.fn}">${this.fn}</mo>`);

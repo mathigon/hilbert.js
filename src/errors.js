@@ -43,8 +43,12 @@ export class ExprError extends Error {
     return new ExprError('SyntaxError', `Unclosed bracket “${x}”.`);
   }
 
-  static startingOperator(x) {
-    return new ExprError('SyntaxError', `A term cannot start or end with a “${x}”.`);
+  static startOperator(x) {
+    return new ExprError('SyntaxError', `A term cannot start with a “${x}”.`);
+  }
+
+  static endOperator(x) {
+    return new ExprError('SyntaxError', `A term cannot end with a “${x}”.`);
   }
 
   static consecutiveOperators(x, y) {

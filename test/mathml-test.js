@@ -19,9 +19,9 @@ tape('Basic', function(test) {
   test.equal(mathML('xy'), '<mi>xy</mi>');
   test.equal(mathML('x y'), '<mi>x</mi><mi>y</mi>');
   test.equal(mathML('+'), '<mo value="+">+</mo>');
-  test.equal(mathML('-'), '<mo value="-">-</mo>');
+  test.equal(mathML('-'), '<mo value="−">−</mo>');
   test.equal(mathML('1+1 = 2'), '<mn>1</mn><mo value="+">+</mo><mn>1</mn><mo value="=">=</mo><mn>2</mn>');
-  test.equal(mathML('3 - 2=1'), '<mn>3</mn><mo value="-">-</mo><mn>2</mn><mo value="=">=</mo><mn>1</mn>');
+  test.equal(mathML('3 - 2=1'), '<mn>3</mn><mo value="−">−</mo><mn>2</mn><mo value="=">=</mo><mn>1</mn>');
   test.end();
 });
 
@@ -34,10 +34,10 @@ tape('Whitespace', function(test) {
 tape('Functions', function(test) {
   test.equal(mathML('sin (a + b)'), '<mi>sin</mi><mfenced><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('tan = sin/cos'), '<mi>tan</mi><mo value="=">=</mo><mfrac><mi>sin</mi><mi>cos</mi></mfrac>');
-  test.equal(mathML('sinh(x) = (e^x - e^(-x))/2'), '<mi>sinh</mi><mfenced><mi>x</mi></mfenced><mo value="=">=</mo><mfrac><mrow><msup><mi>e</mi><mi>x</mi></msup><mo value="-">-</mo><msup><mi>e</mi><mrow><mo value="-">-</mo><mi>x</mi></mrow></msup></mrow><mn>2</mn></mfrac>');
+  test.equal(mathML('sinh(x) = (e^x - e^(-x))/2'), '<mi>sinh</mi><mfenced><mi>x</mi></mfenced><mo value="=">=</mo><mfrac><mrow><msup><mi>e</mi><mi>x</mi></msup><mo value="−">−</mo><msup><mi>e</mi><mrow><mo value="−">−</mo><mi>x</mi></mrow></msup></mrow><mn>2</mn></mfrac>');
   test.equal(mathML('ln(x^2) = 2 ln(x)'), '<mi>ln</mi><mfenced><msup><mi>x</mi><mn>2</mn></msup></mfenced><mo value="=">=</mo><mn>2</mn><mi>ln</mi><mfenced><mi>x</mi></mfenced>');
-  test.equal(mathML('ln(x/y) = ln(x) - ln(y)'), '<mi>ln</mi><mfenced><mfrac><mi>x</mi><mi>y</mi></mfrac></mfenced><mo value="=">=</mo><mi>ln</mi><mfenced><mi>x</mi></mfenced><mo value="-">-</mo><mi>ln</mi><mfenced><mi>y</mi></mfenced>');
-  test.equal(mathML('a^(p-1) == 1'), '<msup><mi>a</mi><mrow><mi>p</mi><mo value="-">-</mo><mn>1</mn></mrow></msup><mo value="≡">≡</mo><mn>1</mn>');
+  test.equal(mathML('ln(x/y) = ln(x) - ln(y)'), '<mi>ln</mi><mfenced><mfrac><mi>x</mi><mi>y</mi></mfrac></mfenced><mo value="=">=</mo><mi>ln</mi><mfenced><mi>x</mi></mfenced><mo value="−">−</mo><mi>ln</mi><mfenced><mi>y</mi></mfenced>');
+  test.equal(mathML('a^(p-1) == 1'), '<msup><mi>a</mi><mrow><mi>p</mi><mo value="−">−</mo><mn>1</mn></mrow></msup><mo value="≡">≡</mo><mn>1</mn>');
   // test.equal(mathML('log_b(x) = log_k(x)/log_k(b)'), 'xxx');  // TODO Support functions with subscripts
   test.end();
 });
@@ -64,7 +64,7 @@ tape('Roots', function(test) {
   test.equal(mathML('sqrt(x)'), '<msqrt><mi>x</mi></msqrt>');
   test.equal(mathML('root(x, 3)'), '<mroot><mi>x</mi><mn>3</mn></mroot>');
   test.equal(mathML('sqrt(2) ~~ 1.414213562'), '<msqrt><mn>2</mn></msqrt><mo value="≈">≈</mo><mn>1.414213562</mn>');
-  test.equal(mathML('x = (-b +- sqrt(b^2 - 4a c)) / (2a)'), '<mi>x</mi><mo value="=">=</mo><mfrac><mrow><mo value="-">-</mo><mi>b</mi><mo value="±">±</mo><msqrt><msup><mi>b</mi><mn>2</mn></msup><mo value="-">-</mo><mn>4</mn><mi>a</mi><mi>c</mi></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac>');
+  test.equal(mathML('x = (-b +- sqrt(b^2 - 4a c)) / (2a)'), '<mi>x</mi><mo value="=">=</mo><mfrac><mrow><mo value="−">−</mo><mi>b</mi><mo value="±">±</mo><msqrt><msup><mi>b</mi><mn>2</mn></msup><mo value="−">−</mo><mn>4</mn><mi>a</mi><mi>c</mi></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac>');
   test.equal(mathML('phi = (1 + sqrt(5))/2'), '<mi>φ</mi><mo value="=">=</mo><mfrac><mrow><mn>1</mn><mo value="+">+</mo><msqrt><mn>5</mn></msqrt></mrow><mn>2</mn></mfrac>');
   test.equal(mathML('sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + …)))))))'), '<msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><mo value="…">…</mo></msqrt></msqrt></msqrt></msqrt></msqrt></msqrt></msqrt>');
   test.end();
@@ -74,8 +74,8 @@ tape('Groupings', function(test) {
   test.equal(mathML('(a+b)'), '<mfenced open="(" close=")"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('a,b,c'), '<mi>a</mi><mo value=",">,</mo><mi>b</mi><mo value=",">,</mo><mi>c</mi>');
   test.equal(mathML('(a,b,c)'), '<mfenced open="(" close=")"><mi>a</mi><mo value="," lspace="0">,</mo><mi>b</mi><mo value="," lspace="0">,</mo><mi>c</mi></mfenced>');
-  test.equal(mathML('(x+y)(x-y) = x^2-y^2'), '<mfenced open="(" close=")"><mi>x</mi><mo value="+">+</mo><mi>y</mi></mfenced><mfenced open="(" close=")"><mi>x</mi><mo value="-">-</mo><mi>y</mi></mfenced><mo value="=">=</mo><msup><mi>x</mi><mn>2</mn></msup><mo value="-">-</mo><msup><mi>y</mi><mn>2</mn></msup>');
-  test.equal(mathML('e^(-x)'), '<msup><mi>e</mi><mrow><mo value="-">-</mo><mi>x</mi></mrow></msup>');
+  test.equal(mathML('(x+y)(x-y) = x^2-y^2'), '<mfenced open="(" close=")"><mi>x</mi><mo value="+">+</mo><mi>y</mi></mfenced><mfenced open="(" close=")"><mi>x</mi><mo value="−">−</mo><mi>y</mi></mfenced><mo value="=">=</mo><msup><mi>x</mi><mn>2</mn></msup><mo value="−">−</mo><msup><mi>y</mi><mn>2</mn></msup>');
+  test.equal(mathML('e^(-x)'), '<msup><mi>e</mi><mrow><mo value="−">−</mo><mi>x</mi></mrow></msup>');
   test.equal(mathML('e^(i tau) = 1'), '<msup><mi>e</mi><mrow><mi>i</mi><mi>τ</mi></mrow></msup><mo value="=">=</mo><mn>1</mn>');
   test.end();
 });
