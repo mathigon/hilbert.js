@@ -1,6 +1,6 @@
 {
   "name": "@mathigon/hilbert",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "JavaScript expression parsing, MathML rendering and CAS.",
   "keywords": [
     "mathematics",
@@ -25,8 +25,8 @@
     "prepublish": "npm test"
   },
   "dependencies": {
-    "@mathigon/fermat": "^0.2.5",
-    "@mathigon/core": "^0.2.3"
+    "@mathigon/fermat": "^0.2.6",
+    "@mathigon/core": "^0.2.5"
   },
   "devDependencies": {
     "eslint": "^5.4.0",
