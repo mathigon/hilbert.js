@@ -90,7 +90,9 @@ export function tokenize(str) {
 // Utility Functions
 
 function makeTerm(items) {
-  return (items.length === 1) ? items[0] : new ExprTerm(items);
+  if (items.length > 1) return new ExprTerm(items);
+  if (items[0] instanceof ExprOperator) return new ExprTerm(items);
+  return items[0];
 }
 
 function splitArray(items, check) {
@@ -187,6 +189,7 @@ function findAssociativeFunction(tokens, symbol, implicit=false) {
   let lastWasSymbol = false;
 
   function clearBuffer() {
+    if (lastWasSymbol) throw ExprError.invalidExpression();
     if (!buffer.length) return;
     result.push(buffer.length > 1 ? new ExprFunction(symbol[0], buffer) : buffer[0]);
     buffer = [];
@@ -210,7 +213,6 @@ function findAssociativeFunction(tokens, symbol, implicit=false) {
     }
   }
 
-  if (lastWasSymbol) throw ExprError.invalidExpression();
   clearBuffer();
   return result;
 }
@@ -233,7 +235,7 @@ export function collapseTerm(tokens) {
   findBinaryFunction(tokens, '//', '/');
 
   // Match multiplication operators.
-  tokens = findAssociativeFunction(tokens, '* × ·', true);
+  tokens = findAssociativeFunction(tokens, '× * ·', true);
 
   // Match - and ± operators.
   if (isOperator(tokens[0], '− ±')) {

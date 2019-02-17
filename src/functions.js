@@ -11,7 +11,7 @@ import { ExprElement, ExprTerm, ExprNumber } from './elements'
 import { ExprError } from './errors'
 
 
-const PRECEDENCE = words('+ − * × · // ^');
+const PRECEDENCE = words('+ − * × · // sup sub');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 
 function needsBrackets(expr, parentFn) {
@@ -19,10 +19,14 @@ function needsBrackets(expr, parentFn) {
   if (expr instanceof ExprTerm) return true;
   if (!(expr instanceof ExprFunction)) return false;
   if (!PRECEDENCE.includes(expr.fn)) return false;
-  return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr);
+  return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr.fn);
 }
 
-function addRow(expr, string) {
+function addMFence(expr, fn, string) {
+  return needsBrackets(expr, fn) ? `<mfenced>${string}</mfenced>` : string;
+}
+
+function addMRow(expr, string) {
   const needsRow = (expr instanceof ExprTerm) || (expr instanceof ExprFunction);
   return needsRow ? `<mrow>${string}</mrow>` : string;
 }
@@ -66,6 +70,7 @@ export class ExprFunction extends ExprElement {
   }
 
   collapse() {
+    if (this.fn === '(') return this.args[0].collapse();
     return new ExprFunction(this.fn, this.args.map(a => a.collapse()));
   }
 
@@ -89,7 +94,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn === '−')
       return args.length > 1 ? args.join(' − ') : '−' + args[0];
 
-    if (this.fn === '^') return args.join('^');
+    if (this.fn === 'sup') return args.join('^');
 
     if (words('+ * × · / sup = < > ≤ ≥').includes(this.fn))
       return args.join(' ' + this.fn + ' ');
@@ -104,42 +109,50 @@ export class ExprFunction extends ExprElement {
   }
 
   toMathML(custom={}) {
-    const args = this.args.map(a => needsBrackets(a, this.fn) ?
-        '<mfenced>' + a.toMathML() + '</mfenced>' : a.toMathML());
+    const args = this.args.map(a => a.toMathML());
+    const argsF = this.args.map((a, i) => addMFence(a, this.fn, args[i]));
 
-    if (this.fn in custom) return custom[this.fn](...args);
+    if (this.fn in custom) return custom[this.fn](...argsF);
 
-    if (this.fn === '−') return args.length > 1 ?
-        args.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + args[0];
+    if (this.fn === '−') return argsF.length > 1 ?
+        argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
 
     if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥'))
-      return args.join(`<mo value="${this.fn}">${this.fn}</mo>`);
+      return argsF.join(`<mo value="${this.fn}">${this.fn}</mo>`);
 
     if (isOneOf(this.fn, '*', '×', '·')) {
-      let str = args[0];
-      for (let i = 1; i < args.length - 1; ++i) {
+      let str = argsF[0];
+      for (let i = 1; i < argsF.length - 1; ++i) {
         // We only show the × symbol between consecutive numbers.
         const showTimes = (this.args[0] instanceof ExprNumber && this.args[1] instanceof ExprNumber);
-        str += (showTimes ? `<mo value="×">×</mo>` : '') + args[1];
+        str += (showTimes ? `<mo value="×">×</mo>` : '') + argsF[1];
       }
       return str;
     }
 
-    if (this.fn === 'sqrt') return `<msqrt>${args[0]}</msqrt>`;
+    if (this.fn === '//') return argsF.join(`<mo value="/">/</mo>`);
+    if (this.fn === 'sqrt') return `<msqrt>${argsF[0]}</msqrt>`;
 
-    if (isOneOf(this.fn, '/', 'sup', 'sub', 'root')) {
-      const el =  {'/': 'mfrac', 'sup': 'msup', 'sub': 'msub', 'root': 'mroot'}[this.fn];
-      const args1 = args.map((a, i) => addRow(this.args[i], a));
+    if (isOneOf(this.fn, '/', 'root')) {
+      // Fractions or square roots don't have brackets around their arguments
+      const el = (this.fn === '/' ? 'mfrac' : 'mroot');
+      const args1 = this.args.map((a, i) => addMRow(a, args[i]));
       return `<${el}>${args1.join('')}</${el}>`;
     }
 
+    if (isOneOf(this.fn, 'sup', 'sub')) {
+      // Sup and sub only have brackets around their first argument.
+      const args1 = [addMRow(this.args[0], argsF[0]), addMRow(this.args[1], args[1])];
+      return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
+    }
+
     if (isOneOf(this.fn, '(', '[', '{'))
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${args.join(COMMA)}</mfenced>`;
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(COMMA)}</mfenced>`;
 
     if (isOneOf(this.fn, '!', '%'))
-      return args[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
+      return argsF[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
 
     // TODO Implement other functions
-    return `<mi>${this.fn}</mi><mfenced>${args.join(COMMA)}</mfenced>`;
+    return `<mi>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
   }
 }
