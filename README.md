@@ -12,7 +12,6 @@ award-winning mathematics education project.
 
 Note: this library is still under development, and not ready for production use.
 
-* [ ] _Remove expressions code from `fermat.js`. Update x-equation._
 * [ ] Support for functions with subscripts (e.g. `log_a(b)`).
 * [ ] Support for super+subscripts (e.g. `a_n^2` or `a^2_n`).
 * [ ] Support for large operators (sum, product and integral).
