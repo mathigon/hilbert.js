@@ -118,7 +118,7 @@ export class ExprTerm extends ExprElement {
   substitute(vars={}) { return this.collapse().substitute(vars); }
   get simplified() { return this.collapse().simplified; }
   get variables() { return unique(join(...this.items.map(i => i.variables))); }
-  get functions() { return unique(join(...this.items.map(i => i.functions))); }
+  get functions() { return this.collapse().functions; }
   toString() { return this.items.map(i => i.toString()).join(' '); }
   toMathML(custom={}) { return this.items.map(i => i.toMathML(custom)).join(''); }
   collapse() { return collapseTerm(this.items).collapse(); }
