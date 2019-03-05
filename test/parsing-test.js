@@ -29,6 +29,19 @@ tape('special operators', function(test) {
   test.end();
 });
 
+tape('functions', function(test) {
+  test.equal(str('A_B'), 'A_B');
+  test.equal(str('fn(A, B)'), 'fn(A, B)');
+  test.end();
+});
+
+tape('strings', function(test) {
+  test.equal(str('"A" + "B"'), '"A" + "B"');
+  test.equal(str('"A"_"B"'), '"A"_"B"');
+  test.equal(str('fn(A_"B",C)'), 'fn(A_"B", C)');
+  test.end();
+});
+
 tape('errors', function(test) {
   test.throws(() => expr('a + + b').collapse());
   test.throws(() => expr('a * - b').collapse());

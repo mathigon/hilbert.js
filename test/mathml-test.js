@@ -9,7 +9,7 @@ const tape = require('tape');
 const hilbert = require('../');
 
 const expr = (src) => hilbert.Expression.parse(src);
-const mathML = (src) => expr(src).toMathML();
+const mathML = (src, replace = {}) => expr(src).toMathML(replace);
 
 
 tape('Basic', function(test) {
@@ -24,6 +24,21 @@ tape('Basic', function(test) {
   test.equal(mathML('3 - 2=1'), '<mn>3</mn><mo value="−">−</mo><mn>2</mn><mo value="=">=</mo><mn>1</mn>');
   test.end();
 });
+
+
+tape('Custom Functions', function(test) {
+  const options = {
+    a: (a) => `<a>${a}</a>`,
+    b: (...b) => `<b>${b.join(',')}</b>`,
+    c: (c) => `<c attr="${c.val.s}">${c}</c>`
+  };
+
+  test.equal(mathML('a(1)', options), '<a><mn>1</mn></a>');
+  test.equal(mathML('b(1,2)', options), '<b><mn>1</mn>,<mn>2</mn></b>');
+  test.equal(mathML('c("text")', options), '<c attr="text"><mtext>text</mtext></c>');
+  test.end();
+});
+
 
 tape('Whitespace', function(test) {
   test.equal(mathML('a  b'), '<mi>a</mi><mspace/><mi>b</mi>');

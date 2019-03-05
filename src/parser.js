@@ -21,7 +21,7 @@ function createToken(buffer, type) {
 
   if (type === 'NUM') return new ExprNumber(+buffer);
   if (type === 'SPACE' && buffer.length > 1) return new ExprSpace();
-  if (type === 'STRING') return new ExprString(buffer);
+  if (type === 'STR') return new ExprString(buffer);
 
   if (type === 'VAR') {
     if (buffer in SPECIAL_IDENTIFIERS) {
@@ -232,7 +232,7 @@ export function collapseTerm(tokens) {
 
   // Match comparison and division operators.
   findBinaryFunction(tokens, '= < > ≤ ≥');
-  findBinaryFunction(tokens, '//', '/');
+  findBinaryFunction(tokens, '// ÷', '/');
 
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);

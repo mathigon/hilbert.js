@@ -95,8 +95,9 @@ export class ExprFunction extends ExprElement {
       return args.length > 1 ? args.join(' − ') : '−' + args[0];
 
     if (this.fn === 'sup') return args.join('^');
+    if (this.fn === 'sub') return args.join('_');
 
-    if (words('+ * × · / sup = < > ≤ ≥').includes(this.fn))
+    if (words('+ * × · / = < > ≤ ≥').includes(this.fn))
       return args.join(' ' + this.fn + ' ');
 
     if (isOneOf(this.fn, '(', '[', '{'))
@@ -109,10 +110,13 @@ export class ExprFunction extends ExprElement {
   }
 
   toMathML(custom={}) {
-    const args = this.args.map(a => a.toMathML());
+    const args = this.args.map(a => a.toMathML(custom));
     const argsF = this.args.map((a, i) => addMFence(a, this.fn, args[i]));
 
-    if (this.fn in custom) return custom[this.fn](...argsF);
+    if (this.fn in custom) {
+      const argsX = args.map((a, i) => ({toString: () => a, val: this.args[i]}));
+      return custom[this.fn](...argsX);
+    }
 
     if (this.fn === '−') return argsF.length > 1 ?
         argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];

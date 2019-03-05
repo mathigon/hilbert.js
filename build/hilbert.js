@@ -445,7 +445,7 @@ class ExprTerm extends ExprElement {
   substitute(vars={}) { return this.collapse().substitute(vars); }
   get simplified() { return this.collapse().simplified; }
   get variables() { return unique(join(...this.items.map(i => i.variables))); }
-  get functions() { return unique(join(...this.items.map(i => i.functions))); }
+  get functions() { return this.collapse().functions; }
   toString() { return this.items.map(i => i.toString()).join(' '); }
   toMathML(custom={}) { return this.items.map(i => i.toMathML(custom)).join(''); }
   collapse() { return collapseTerm(this.items).collapse(); }
@@ -538,8 +538,9 @@ class ExprFunction extends ExprElement {
       return args.length > 1 ? args.join(' − ') : '−' + args[0];
 
     if (this.fn === 'sup') return args.join('^');
+    if (this.fn === 'sub') return args.join('_');
 
-    if (words('+ * × · / sup = < > ≤ ≥').includes(this.fn))
+    if (words('+ * × · / = < > ≤ ≥').includes(this.fn))
       return args.join(' ' + this.fn + ' ');
 
     if (isOneOf(this.fn, '(', '[', '{'))
@@ -552,10 +553,13 @@ class ExprFunction extends ExprElement {
   }
 
   toMathML(custom={}) {
-    const args = this.args.map(a => a.toMathML());
+    const args = this.args.map(a => a.toMathML(custom));
     const argsF = this.args.map((a, i) => addMFence(a, this.fn, args[i]));
 
-    if (this.fn in custom) return custom[this.fn](...argsF);
+    if (this.fn in custom) {
+      const argsX = args.map((a, i) => ({toString: () => a, val: this.args[i]}));
+      return custom[this.fn](...argsX);
+    }
 
     if (this.fn === '−') return argsF.length > 1 ?
         argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
@@ -612,7 +616,7 @@ function createToken(buffer, type) {
 
   if (type === 'NUM') return new ExprNumber(+buffer);
   if (type === 'SPACE' && buffer.length > 1) return new ExprSpace();
-  if (type === 'STRING') return new ExprString(buffer);
+  if (type === 'STR') return new ExprString(buffer);
 
   if (type === 'VAR') {
     if (buffer in SPECIAL_IDENTIFIERS) {
@@ -823,7 +827,7 @@ function collapseTerm(tokens) {
 
   // Match comparison and division operators.
   findBinaryFunction(tokens, '= < > ≤ ≥');
-  findBinaryFunction(tokens, '//', '/');
+  findBinaryFunction(tokens, '// ÷', '/');
 
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);
