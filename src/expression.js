@@ -31,20 +31,25 @@ function parse(str, collapse = false) {
  * @returns {boolean}
  */
 function numEquals(expr1, expr2) {
-  const vars = unique([...expr1.variables, ...expr2.variables]);
-  const fn1 = expr1.collapse();
-  const fn2 = expr2.collapse();
+  try {
+    const vars = unique([...expr1.variables, ...expr2.variables]);
+    const fn1 = expr1.collapse();
+    const fn2 = expr2.collapse();
 
-  // We only test positive random numbers, because negative numbers raised
-  // to non-integer powers return NaN.
-  for (let i = 0; i < 5; ++i) {
-    const substitution = {};
-    for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
-    const a = fn1.evaluate(substitution);
-    const b = fn2.evaluate(substitution);
-    if (!nearlyEquals(a, b)) return false;
+    // We only test positive random numbers, because negative numbers raised
+    // to non-integer powers return NaN.
+    for (let i = 0; i < 5; ++i) {
+      const substitution = {};
+      for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
+      const a = fn1.evaluate(substitution);
+      const b = fn2.evaluate(substitution);
+      if (isNaN(a) || isNaN(b)) continue;  // This might happen in square roots.
+      if (!nearlyEquals(a, b)) return false;
+    }
+    return true;
+  } catch(e) {
+    return false;
   }
-  return true;
 }
 
 export const Expression = {
