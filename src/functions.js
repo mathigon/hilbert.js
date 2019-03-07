@@ -11,7 +11,7 @@ import { ExprElement, ExprTerm, ExprNumber } from './elements'
 import { ExprError } from './errors'
 
 
-const PRECEDENCE = words('+ − * × · // sup sub');
+const PRECEDENCE = words('+ − * × · / ÷ // sup sub');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 
 function needsBrackets(expr, parentFn) {
