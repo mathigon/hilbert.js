@@ -160,7 +160,9 @@ export function matchBrackets(tokens) {
       const term = last(stack);
 
       // Check if this is a normal bracket, or a function call.
-      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier);
+      // Terms like x(y) are treated as functions, rather than implicit
+      // multiplication, except for π(y).
+      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier && last(term).i !== 'π');
       const fnName = isFn ? term.pop().i : isOperator(t, '|') ? 'abs' : closed[0].o;
 
       // Support multiple arguments for function calls.
