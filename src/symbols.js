@@ -101,6 +101,6 @@ const UPPERCASE = ALPHABET.toUpperCase().split('');
 const GREEK = Object.values(SPECIAL_IDENTIFIERS);
 export const IDENTIFIER_SYMBOLS = [...LOWERCASE, ...UPPERCASE, ...GREEK];
 
-const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…';
+const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…°';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 export const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
