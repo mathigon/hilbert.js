@@ -19,9 +19,14 @@ import { ExprError } from "./errors";
 function createToken(buffer, type) {
   if (!buffer || !type) return null;
 
-  if (type === 'NUM') return new ExprNumber(+buffer);
   if (type === 'SPACE' && buffer.length > 1) return new ExprSpace();
   if (type === 'STR') return new ExprString(buffer);
+
+  if (type === 'NUM') {
+    // This can happen if users simply type ".", which get parsed as number.
+    if (isNaN(+buffer)) throw ExprError.invalidExpression();
+    return new ExprNumber(+buffer);
+  }
 
   if (type === 'VAR') {
     if (buffer in SPECIAL_IDENTIFIERS) {
