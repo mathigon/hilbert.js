@@ -97,7 +97,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn === 'sup') return args.join('^');
     if (this.fn === 'sub') return args.join('_');
 
-    if (words('+ * × · / = < > ≤ ≥').includes(this.fn))
+    if (words('+ * × · / = < > ≤ ≥ ≈').includes(this.fn))
       return args.join(' ' + this.fn + ' ');
 
     if (isOneOf(this.fn, '(', '[', '{'))
@@ -157,6 +157,15 @@ export class ExprFunction extends ExprElement {
 
     if (isOneOf(this.fn, '!', '%'))
       return argsF[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
+
+    if (this.fn === 'abs')
+      return `<mfenced open="|" close="|">${argsF.join(COMMA)}</mfenced>`;
+
+    if (this.fn === 'bar')
+      return `<mover>${addMRow(this.args[0], argsF[0])}<mo value="‾">‾</mo></mover>`;
+
+    if (this.fn === 'vec')
+      return `<mover>${addMRow(this.args[0], argsF[0])}<mo value="→">→</mo></mover>`;
 
     // TODO Implement other functions
     const variant = isSpecialFunction(this.fn) ? ' mathvariant="normal"' : '';

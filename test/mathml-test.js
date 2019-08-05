@@ -17,6 +17,7 @@ tape('Basic', function(test) {
   test.equal(mathML('3.141592654'), '<mn>3.141592654</mn>');
   test.equal(mathML('x'), '<mi>x</mi>');
   test.equal(mathML('xy'), '<mi>xy</mi>');
+  test.equal(mathML('log'), '<mi mathvariant="normal">log</mi>');
   test.equal(mathML('x y'), '<mi>x</mi><mi>y</mi>');
   test.equal(mathML('+'), '<mo value="+">+</mo>');
   test.equal(mathML('-'), '<mo value="−">−</mo>');
@@ -25,6 +26,12 @@ tape('Basic', function(test) {
   test.end();
 });
 
+tape('HTML Characters', function(test) {
+  test.equal(mathML('a < b'), '<mi>a</mi><mo value="&lt;">&lt;</mo><mi>b</mi>');
+  test.equal(mathML('a > b'), '<mi>a</mi><mo value="&gt;">&gt;</mo><mi>b</mi>');
+  test.equal(mathML('a ≥ b'), '<mi>a</mi><mo value="≥">≥</mo><mi>b</mi>');
+  test.end();
+});
 
 tape('Custom Functions', function(test) {
   const options = {
@@ -47,11 +54,11 @@ tape('Whitespace', function(test) {
 });
 
 tape('Functions', function(test) {
-  test.equal(mathML('sin (a + b)'), '<mi>sin</mi><mfenced><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
-  test.equal(mathML('tan = sin/cos'), '<mi>tan</mi><mo value="=">=</mo><mfrac><mi>sin</mi><mi>cos</mi></mfrac>');
-  test.equal(mathML('sinh(x) = (e^x - e^(-x))/2'), '<mi>sinh</mi><mfenced><mi>x</mi></mfenced><mo value="=">=</mo><mfrac><mrow><msup><mi>e</mi><mi>x</mi></msup><mo value="−">−</mo><msup><mi>e</mi><mrow><mo value="−">−</mo><mi>x</mi></mrow></msup></mrow><mn>2</mn></mfrac>');
-  test.equal(mathML('ln(x^2) = 2 ln(x)'), '<mi>ln</mi><mfenced><msup><mi>x</mi><mn>2</mn></msup></mfenced><mo value="=">=</mo><mn>2</mn><mi>ln</mi><mfenced><mi>x</mi></mfenced>');
-  test.equal(mathML('ln(x/y) = ln(x) - ln(y)'), '<mi>ln</mi><mfenced><mfrac><mi>x</mi><mi>y</mi></mfrac></mfenced><mo value="=">=</mo><mi>ln</mi><mfenced><mi>x</mi></mfenced><mo value="−">−</mo><mi>ln</mi><mfenced><mi>y</mi></mfenced>');
+  test.equal(mathML('sin(a + b)'), '<mi mathvariant="normal">sin</mi><mfenced><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
+  test.equal(mathML('tan = sin/cos'), '<mi mathvariant="normal">tan</mi><mo value="=">=</mo><mfrac><mi mathvariant="normal">sin</mi><mi mathvariant="normal">cos</mi></mfrac>');
+  test.equal(mathML('sinh(x) = (e^x - e^(-x))/2'), '<mi mathvariant="normal">sinh</mi><mfenced><mi>x</mi></mfenced><mo value="=">=</mo><mfrac><mrow><msup><mi>e</mi><mi>x</mi></msup><mo value="−">−</mo><msup><mi>e</mi><mrow><mo value="−">−</mo><mi>x</mi></mrow></msup></mrow><mn>2</mn></mfrac>');
+  test.equal(mathML('ln(x^2) = 2 ln(x)'), '<mi mathvariant="normal">ln</mi><mfenced><msup><mi>x</mi><mn>2</mn></msup></mfenced><mo value="=">=</mo><mn>2</mn><mi mathvariant="normal">ln</mi><mfenced><mi>x</mi></mfenced>');
+  test.equal(mathML('ln(x/y) = ln(x) - ln(y)'), '<mi mathvariant="normal">ln</mi><mfenced><mfrac><mi>x</mi><mi>y</mi></mfrac></mfenced><mo value="=">=</mo><mi mathvariant="normal">ln</mi><mfenced><mi>x</mi></mfenced><mo value="−">−</mo><mi mathvariant="normal">ln</mi><mfenced><mi>y</mi></mfenced>');
   test.equal(mathML('a^(p-1) == 1'), '<msup><mi>a</mi><mrow><mi>p</mi><mo value="−">−</mo><mn>1</mn></mrow></msup><mo value="≡">≡</mo><mn>1</mn>');
   // test.equal(mathML('log_b(x) = log_k(x)/log_k(b)'), 'xxx');  // TODO Support functions with subscripts
   test.end();
@@ -87,6 +94,7 @@ tape('Roots', function(test) {
 
 tape('Groupings', function(test) {
   test.equal(mathML('(a+b)'), '<mfenced open="(" close=")"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
+  test.equal(mathML('|a+b|'), '<mfenced open="|" close="|"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('a,b,c'), '<mi>a</mi><mo value=",">,</mo><mi>b</mi><mo value=",">,</mo><mi>c</mi>');
   test.equal(mathML('(a,b,c)'), '<mfenced open="(" close=")"><mi>a</mi><mo value="," lspace="0">,</mo><mi>b</mi><mo value="," lspace="0">,</mo><mi>c</mi></mfenced>');
   test.equal(mathML('(x+y)(x-y) = x^2-y^2'), '<mfenced open="(" close=")"><mi>x</mi><mo value="+">+</mo><mi>y</mi></mfenced><mfenced open="(" close=")"><mi>x</mi><mo value="−">−</mo><mi>y</mi></mfenced><mo value="=">=</mo><msup><mi>x</mi><mn>2</mn></msup><mo value="−">−</mo><msup><mi>y</mi><mn>2</mn></msup>');

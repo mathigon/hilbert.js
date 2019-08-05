@@ -42,6 +42,24 @@ tape('strings', function(test) {
   test.end();
 });
 
+tape('super and subscripts', function(test) {
+  test.equal(str('x^2_n'), '(x^2)_n');
+  test.equal(str('x^(2_n)'), 'x^2_n');
+  test.equal(str('x_n^2'), 'x_(n^2)');
+  test.equal(str('x_1^2 + 2^3_(n^2)'), 'x_(1^2) + (2^3)_(n^2)');
+  test.equal(str('x_(n+1) = x_n / 2'), 'x_(n + 1) = x_n / 2');
+  test.end();
+});
+
+tape('symbols', function(test) {
+  test.equal(str('oo'), '∞');
+  test.equal(str('AA A'), '∀ A');
+  test.equal(str('EE E'), '∃ E');
+  test.equal(str('x in y'), 'x ∈ y');
+  test.equal(str('a != b'), 'a ≠ b');
+  test.end();
+});
+
 tape('errors', function(test) {
   test.throws(() => expr('a + + b').collapse());
   test.throws(() => expr('a * - b').collapse());
