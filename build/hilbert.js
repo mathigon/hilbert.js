@@ -137,8 +137,8 @@ function flatten(array) {
 
 /**
  * Join multiple Arrays
- * @param {*[]...} arrays
- * @returns {*[]}
+ * @param {...Array} arrays
+ * @returns {Array}
  */
 function join(...arrays) {
   return [].concat(...arrays);
@@ -183,6 +183,7 @@ const tolerance = 0.000001;
  * @returns {boolean}
  */
 function nearlyEquals(x, y, t = tolerance) {
+  if (isNaN(x) || isNaN(y)) return false;
   return Math.abs(x - y) < t;
 }
 
@@ -260,6 +261,7 @@ const SPECIAL_OPERATORS = {
   not: '¬',
   AA: '∀',
   EE: '∃',
+  '\'': '’',
 
   '!=': '≠',
   '<=': '≤',
@@ -272,6 +274,7 @@ const SPECIAL_OPERATORS = {
   sub: '⊂',
   sube: '⊆',
   prop: '∝',
+  oo: '∞',
 
   '<-': '←',
   '->': '→',
@@ -331,9 +334,26 @@ const UPPERCASE = ALPHABET.toUpperCase().split('');
 const GREEK = Object.values(SPECIAL_IDENTIFIERS);
 const IDENTIFIER_SYMBOLS = [...LOWERCASE, ...UPPERCASE, ...GREEK];
 
-const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…';
+const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…°•∥⊥\'';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
+
+const ESCAPES = {
+  '<': '&lt;',
+  '>': '&gt;'
+};
+
+function escape(char) {
+  return (char in ESCAPES) ? ESCAPES[char] : char;
+}
+
+const SPECIAL = new Set(['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin',
+    'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth', 'exp',
+    'log', 'ln', 'det', 'dim', 'mod', 'gcd', 'lcm', 'min', 'max']);
+
+function isSpecialFunction(fn) {
+  return SPECIAL.has(fn);
+}
 
 // =============================================================================
 
@@ -414,10 +434,14 @@ class ExprIdentifier extends ExprElement {
     throw ExprError.undefinedVariable(this.i);
   }
 
+  toMathML() {
+    const variant = isSpecialFunction(this.i) ? ' mathvariant="normal"' : '';
+    return `<mi${variant}>${this.i}</mi>`;
+  }
+
   substitute(vars={}) { return vars[this.i] || this; }
   get variables() { return [this.i]; }
   toString() { return this.i; }
-  toMathML() { return `<mi>${this.i}</mi>`; }
 }
 
 class ExprString extends ExprElement {
@@ -435,8 +459,12 @@ class ExprSpace extends ExprElement {
 class ExprOperator extends ExprElement {
   constructor(o) { super(); this.o = o; }
   toString() { return this.o.replace('//', '/'); }
-  toMathML() { return `<mo value="${this.toString()}">${this.toString()}</mo>`; }
   get functions() { return [this.o]; }
+
+  toMathML() {
+    const op = escape(this.toString());
+    return `<mo value="${op}">${op}</mo>`;
+  }
 }
 
 class ExprTerm extends ExprElement {
@@ -454,7 +482,7 @@ class ExprTerm extends ExprElement {
 // =============================================================================
 
 
-const PRECEDENCE = words('+ − * × · // sup sub');
+const PRECEDENCE = words('+ − * × · / ÷ // sup sub');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 
 function needsBrackets(expr, parentFn) {
@@ -540,7 +568,7 @@ class ExprFunction extends ExprElement {
     if (this.fn === 'sup') return args.join('^');
     if (this.fn === 'sub') return args.join('_');
 
-    if (words('+ * × · / = < > ≤ ≥').includes(this.fn))
+    if (words('+ * × · / = < > ≤ ≥ ≈').includes(this.fn))
       return args.join(' ' + this.fn + ' ');
 
     if (isOneOf(this.fn, '(', '[', '{'))
@@ -564,8 +592,10 @@ class ExprFunction extends ExprElement {
     if (this.fn === '−') return argsF.length > 1 ?
         argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
 
-    if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥'))
-      return argsF.join(`<mo value="${this.fn}">${this.fn}</mo>`);
+    if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥', '≈')) {
+      const fn = escape(this.fn);
+      return argsF.join(`<mo value="${fn}">${fn}</mo>`);
+    }
 
     if (isOneOf(this.fn, '*', '×', '·')) {
       let str = argsF[0];
@@ -599,8 +629,18 @@ class ExprFunction extends ExprElement {
     if (isOneOf(this.fn, '!', '%'))
       return argsF[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
 
+    if (this.fn === 'abs')
+      return `<mfenced open="|" close="|">${argsF.join(COMMA)}</mfenced>`;
+
+    if (this.fn === 'bar')
+      return `<mover>${addMRow(this.args[0], argsF[0])}<mo value="‾">‾</mo></mover>`;
+
+    if (this.fn === 'vec')
+      return `<mover>${addMRow(this.args[0], argsF[0])}<mo value="→">→</mo></mover>`;
+
     // TODO Implement other functions
-    return `<mi>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
+    const variant = isSpecialFunction(this.fn) ? ' mathvariant="normal"' : '';
+    return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
   }
 }
 
@@ -614,9 +654,14 @@ class ExprFunction extends ExprElement {
 function createToken(buffer, type) {
   if (!buffer || !type) return null;
 
-  if (type === 'NUM') return new ExprNumber(+buffer);
   if (type === 'SPACE' && buffer.length > 1) return new ExprSpace();
   if (type === 'STR') return new ExprString(buffer);
+
+  if (type === 'NUM') {
+    // This can happen if users simply type ".", which get parsed as number.
+    if (isNaN(+buffer)) throw ExprError.invalidExpression();
+    return new ExprNumber(+buffer);
+  }
 
   if (type === 'VAR') {
     if (buffer in SPECIAL_IDENTIFIERS) {
@@ -735,12 +780,12 @@ function findBinaryFunction(tokens, fn, toFn) {
 function prepareTerm(tokens) {
   // TODO Combine sup and sub calls into a single supsub function.
   findBinaryFunction(tokens, '^', 'sup');
+  findBinaryFunction(tokens, '_', 'sub');
   findBinaryFunction(tokens, '/');
   return makeTerm(tokens);
 }
 
 function matchBrackets(tokens) {
-  findBinaryFunction(tokens, '_', 'sub');
   const stack = [[]];
 
   for (let t of tokens) {
@@ -755,7 +800,9 @@ function matchBrackets(tokens) {
       const term = last(stack);
 
       // Check if this is a normal bracket, or a function call.
-      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier);
+      // Terms like x(y) are treated as functions, rather than implicit
+      // multiplication, except for π(y).
+      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier && last(term).i !== 'π');
       const fnName = isFn ? term.pop().i : isOperator(t, '|') ? 'abs' : closed[0].o;
 
       // Support multiple arguments for function calls.
@@ -869,20 +916,25 @@ function parse(str, collapse = false) {
  * @returns {boolean}
  */
 function numEquals(expr1, expr2) {
-  const vars = unique([...expr1.variables, ...expr2.variables]);
-  const fn1 = expr1.collapse();
-  const fn2 = expr2.collapse();
+  try {
+    const vars = unique([...expr1.variables, ...expr2.variables]);
+    const fn1 = expr1.collapse();
+    const fn2 = expr2.collapse();
 
-  // We only test positive random numbers, because negative numbers raised
-  // to non-integer powers return NaN.
-  for (let i = 0; i < 5; ++i) {
-    const substitution = {};
-    for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
-    const a = fn1.evaluate(substitution);
-    const b = fn2.evaluate(substitution);
-    if (!nearlyEquals(a, b)) return false;
+    // We only test positive random numbers, because negative numbers raised
+    // to non-integer powers return NaN.
+    for (let i = 0; i < 5; ++i) {
+      const substitution = {};
+      for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
+      const a = fn1.evaluate(substitution);
+      const b = fn2.evaluate(substitution);
+      if (isNaN(a) || isNaN(b)) continue;  // This might happen in square roots.
+      if (!nearlyEquals(a, b)) return false;
+    }
+    return true;
+  } catch(e) {
+    return false;
   }
-  return true;
 }
 
 const Expression = {
