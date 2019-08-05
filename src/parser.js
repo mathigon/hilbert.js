@@ -145,12 +145,12 @@ function findBinaryFunction(tokens, fn, toFn) {
 function prepareTerm(tokens) {
   // TODO Combine sup and sub calls into a single supsub function.
   findBinaryFunction(tokens, '^', 'sup');
+  findBinaryFunction(tokens, '_', 'sub');
   findBinaryFunction(tokens, '/');
   return makeTerm(tokens);
 }
 
 export function matchBrackets(tokens) {
-  findBinaryFunction(tokens, '_', 'sub');
   const stack = [[]];
 
   for (let t of tokens) {
