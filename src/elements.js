@@ -6,7 +6,7 @@
 
 
 import { join, unique } from '@mathigon/core';
-import { CONSTANTS } from './symbols'
+import { CONSTANTS, escape, isSpecialFunction } from './symbols'
 import { collapseTerm } from './parser'
 import { ExprError } from './errors'
 
@@ -87,10 +87,14 @@ export  class ExprIdentifier extends ExprElement {
     throw ExprError.undefinedVariable(this.i);
   }
 
+  toMathML() {
+    const variant = isSpecialFunction(this.i) ? ' mathvariant="normal"' : '';
+    return `<mi${variant}>${this.i}</mi>`;
+  }
+
   substitute(vars={}) { return vars[this.i] || this; }
   get variables() { return [this.i]; }
   toString() { return this.i; }
-  toMathML() { return `<mi>${this.i}</mi>`; }
 }
 
 export class ExprString extends ExprElement {
@@ -108,8 +112,12 @@ export class ExprSpace extends ExprElement {
 export class ExprOperator extends ExprElement {
   constructor(o) { super(); this.o = o; }
   toString() { return this.o.replace('//', '/'); }
-  toMathML() { return `<mo value="${this.toString()}">${this.toString()}</mo>`; }
   get functions() { return [this.o]; }
+
+  toMathML() {
+    const op = escape(this.toString());
+    return `<mo value="${op}">${op}</mo>`;
+  }
 }
 
 export class ExprTerm extends ExprElement {

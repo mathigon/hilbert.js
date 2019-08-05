@@ -6,7 +6,7 @@
 
 
 import { unique, flatten, words, isOneOf } from '@mathigon/core'
-import { BRACKETS } from './symbols'
+import { BRACKETS, escape, isSpecialFunction } from './symbols'
 import { ExprElement, ExprTerm, ExprNumber } from './elements'
 import { ExprError } from './errors'
 
@@ -121,8 +121,10 @@ export class ExprFunction extends ExprElement {
     if (this.fn === '−') return argsF.length > 1 ?
         argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
 
-    if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥'))
-      return argsF.join(`<mo value="${this.fn}">${this.fn}</mo>`);
+    if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥', '≈')) {
+      const fn = escape(this.fn);
+      return argsF.join(`<mo value="${fn}">${fn}</mo>`);
+    }
 
     if (isOneOf(this.fn, '*', '×', '·')) {
       let str = argsF[0];
@@ -157,6 +159,7 @@ export class ExprFunction extends ExprElement {
       return argsF[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
 
     // TODO Implement other functions
-    return `<mi>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
+    const variant = isSpecialFunction(this.fn) ? ' mathvariant="normal"' : '';
+    return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
   }
 }

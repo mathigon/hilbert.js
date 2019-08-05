@@ -104,3 +104,20 @@ export const IDENTIFIER_SYMBOLS = [...LOWERCASE, ...UPPERCASE, ...GREEK];
 const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…°';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 export const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
+
+const ESCAPES = {
+  '<': '&lt;',
+  '>': '&gt;'
+};
+
+export function escape(char) {
+  return (char in ESCAPES) ? ESCAPES[char] : char;
+}
+
+const SPECIAL = new Set(['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin',
+    'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth', 'exp',
+    'log', 'ln', 'det', 'dim', 'mod', 'gcd', 'lcm', 'min', 'max']);
+
+export function isSpecialFunction(fn) {
+  return SPECIAL.has(fn);
+}
