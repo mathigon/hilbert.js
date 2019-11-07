@@ -9,7 +9,8 @@ import {Expression} from '../index';
 
 
 const expr = (src: string) => Expression.parse(src);
-const value = (src: string, vars?: { [key: string]: number }) => expr(src).evaluate(vars || {});
+const value = (src: string, vars?: {[key: string]: number}) => expr(src)
+    .evaluate(vars || {});
 
 
 tape('Basic', (test) => {

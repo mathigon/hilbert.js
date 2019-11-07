@@ -16,9 +16,9 @@ export interface MathMLArgument {
 }
 
 export type CustomFunction = ((...args: number[]) => number);
-export type VarMap = { [key: string]: number | CustomFunction };
-export type ExprMap = { [key: string]: ExprElement };
-export type MathMLMap = { [key: string]: (...args: MathMLArgument[]) => string };
+export type VarMap = {[key: string]: number|CustomFunction};
+export type ExprMap = {[key: string]: ExprElement};
+export type MathMLMap = {[key: string]: (...args: MathMLArgument[]) => string};
 
 
 /**

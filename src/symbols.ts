@@ -4,8 +4,8 @@
 // =============================================================================
 
 
-export type NumberMap = { [key: string]: number };
-export type StringMap = { [key: string]: string };
+export type NumberMap = {[key: string]: number};
+export type StringMap = {[key: string]: string};
 
 
 export const CONSTANTS: NumberMap = {
@@ -124,9 +124,10 @@ export function escape(char: string) {
   return (char in ESCAPES) ? ESCAPES[char] : char;
 }
 
-const SPECIAL = new Set<string>(['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin',
-  'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth', 'exp',
-  'log', 'ln', 'det', 'dim', 'mod', 'gcd', 'lcm', 'min', 'max']);
+const SPECIAL = new Set<string>(
+    ['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin',
+      'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth', 'exp',
+      'log', 'ln', 'det', 'dim', 'mod', 'gcd', 'lcm', 'min', 'max']);
 
 export function isSpecialFunction(fn: string) {
   return SPECIAL.has(fn);

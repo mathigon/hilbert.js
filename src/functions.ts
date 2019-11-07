@@ -68,7 +68,7 @@ export class ExprFunction extends ExprElement {
         return Math.pow(args[0], 1 / args[1]);
       case '(':
         return args[0];
-      // TODO Implement for all functions
+        // TODO Implement for all functions
     }
 
     throw ExprError.undefinedFunction(this.fn);
@@ -98,7 +98,7 @@ export class ExprFunction extends ExprElement {
 
   toString() {
     const args = this.args.map(a => needsBrackets(a, this.fn) ?
-      '(' + a.toString() + ')' : a.toString());
+                                    '(' + a.toString() + ')' : a.toString());
 
     if (this.fn === '−')
       return args.length > 1 ? args.join(' − ') : '−' + args[0];
@@ -131,7 +131,8 @@ export class ExprFunction extends ExprElement {
     }
 
     if (this.fn === '−') return argsF.length > 1 ?
-      argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
+                                argsF.join('<mo value="−">−</mo>') :
+                                '<mo rspace="0" value="−">−</mo>' + argsF[0];
 
     if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥', '≈')) {
       const fn = escape(this.fn);
@@ -142,7 +143,8 @@ export class ExprFunction extends ExprElement {
       let str = argsF[0];
       for (let i = 1; i < argsF.length - 1; ++i) {
         // We only show the × symbol between consecutive numbers.
-        const showTimes = (this.args[0] instanceof ExprNumber && this.args[1] instanceof ExprNumber);
+        const showTimes = (this.args[0] instanceof ExprNumber &&
+                           this.args[1] instanceof ExprNumber);
         str += (showTimes ? `<mo value="×">×</mo>` : '') + argsF[1];
       }
       return str;
@@ -160,12 +162,14 @@ export class ExprFunction extends ExprElement {
 
     if (isOneOf(this.fn, 'sup', 'sub')) {
       // Sup and sub only have brackets around their first argument.
-      const args1 = [addMRow(this.args[0], argsF[0]), addMRow(this.args[1], args[1])];
+      const args1 = [addMRow(this.args[0], argsF[0]),
+        addMRow(this.args[1], args[1])];
       return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
     }
 
     if (isOneOf(this.fn, '(', '[', '{'))
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(COMMA)}</mfenced>`;
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(
+          COMMA)}</mfenced>`;
 
     if (isOneOf(this.fn, '!', '%'))
       return argsF[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
@@ -174,13 +178,16 @@ export class ExprFunction extends ExprElement {
       return `<mfenced open="|" close="|">${argsF.join(COMMA)}</mfenced>`;
 
     if (this.fn === 'bar')
-      return `<mover>${addMRow(this.args[0], argsF[0])}<mo value="‾">‾</mo></mover>`;
+      return `<mover>${addMRow(this.args[0],
+          argsF[0])}<mo value="‾">‾</mo></mover>`;
 
     if (this.fn === 'vec')
-      return `<mover>${addMRow(this.args[0], argsF[0])}<mo value="→">→</mo></mover>`;
+      return `<mover>${addMRow(this.args[0],
+          argsF[0])}<mo value="→">→</mo></mover>`;
 
     // TODO Implement other functions
     const variant = isSpecialFunction(this.fn) ? ' mathvariant="normal"' : '';
-    return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
+    return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(
+        COMMA)}</mfenced>`;
   }
 }
