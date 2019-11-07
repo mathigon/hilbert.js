@@ -4,16 +4,24 @@
 // =============================================================================
 
 
+export type NumberMap = { [key: string]: number };
+export type StringMap = { [key: string]: string };
 
-export const CONSTANTS = {
+
+export const CONSTANTS: NumberMap = {
   pi: Math.PI,
   π: Math.PI,
   e: Math.E
 };
 
-export const BRACKETS = {'(': ')', '[': ']', '{': '}', '|': '|'};
+export const BRACKETS: StringMap = {
+  '(': ')',
+  '[': ']',
+  '{': '}',
+  '|': '|'
+};
 
-export const SPECIAL_OPERATORS = {
+export const SPECIAL_OPERATORS: StringMap = {
   '*': '·',
   '**': '∗',
   '//': '//',
@@ -61,7 +69,7 @@ export const SPECIAL_OPERATORS = {
   ZZ: 'ℤ'
 };
 
-export const SPECIAL_IDENTIFIERS = {
+export const SPECIAL_IDENTIFIERS: StringMap = {
   Gamma: 'Γ',
   Delta: 'Δ',
   Theta: 'Θ',
@@ -107,19 +115,19 @@ const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…°•∥⊥\'∠:%∼△';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 export const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
 
-const ESCAPES = {
+const ESCAPES: StringMap = {
   '<': '&lt;',
   '>': '&gt;'
 };
 
-export function escape(char) {
+export function escape(char: string) {
   return (char in ESCAPES) ? ESCAPES[char] : char;
 }
 
-const SPECIAL = new Set(['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin',
-    'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth', 'exp',
-    'log', 'ln', 'det', 'dim', 'mod', 'gcd', 'lcm', 'min', 'max']);
+const SPECIAL = new Set<string>(['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin',
+  'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth', 'exp',
+  'log', 'ln', 'det', 'dim', 'mod', 'gcd', 'lcm', 'min', 'max']);
 
-export function isSpecialFunction(fn) {
+export function isSpecialFunction(fn: string) {
   return SPECIAL.has(fn);
 }

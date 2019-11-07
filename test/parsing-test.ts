@@ -4,15 +4,15 @@
 // =============================================================================
 
 
-
-const tape = require('tape');
-const hilbert = require('../');
-
-const expr = (src) => hilbert.Expression.parse(src);
-const str = (src) => expr(src).toString();
+import * as tape from 'tape';
+import {Expression} from '../index';
 
 
-tape('basics', function(test) {
+const expr = (src: string) => Expression.parse(src);
+const str = (src: string) => expr(src).toString();
+
+
+tape('basics', (test) => {
   test.equal(str('1'), '1');
   test.equal(str('-1'), '− 1');
   test.equal(str('x + y'), 'x + y');
@@ -22,27 +22,27 @@ tape('basics', function(test) {
   test.end();
 });
 
-tape('special operators', function(test) {
+tape('special operators', (test) => {
   test.equal(str('x - y'), 'x − y');
   test.equal(str('x – y'), 'x − y');
   test.equal(str('x − y'), 'x − y');
   test.end();
 });
 
-tape('functions', function(test) {
+tape('functions', (test) => {
   test.equal(str('A_B'), 'A_B');
   test.equal(str('fn(A, B)'), 'fn(A, B)');
   test.end();
 });
 
-tape('strings', function(test) {
+tape('strings', (test) => {
   test.equal(str('"A" + "B"'), '"A" + "B"');
   test.equal(str('"A"_"B"'), '"A"_"B"');
   test.equal(str('fn(A_"B",C)'), 'fn(A_"B", C)');
   test.end();
 });
 
-tape('super and subscripts', function(test) {
+tape('super and subscripts', (test) => {
   test.equal(str('x^2_n'), '(x^2)_n');
   test.equal(str('x^(2_n)'), 'x^2_n');
   test.equal(str('x_n^2'), 'x_(n^2)');
@@ -51,7 +51,7 @@ tape('super and subscripts', function(test) {
   test.end();
 });
 
-tape('symbols', function(test) {
+tape('symbols', (test) => {
   test.equal(str('oo'), '∞');
   test.equal(str('AA A'), '∀ A');
   test.equal(str('EE E'), '∃ E');
@@ -60,7 +60,7 @@ tape('symbols', function(test) {
   test.end();
 });
 
-tape('errors', function(test) {
+tape('errors', (test) => {
   test.throws(() => expr('a + + b').collapse());
   test.throws(() => expr('a * - b').collapse());
   test.throws(() => expr('a + (a +)').collapse());

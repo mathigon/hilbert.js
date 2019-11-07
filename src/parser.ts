@@ -4,77 +4,78 @@
 // =============================================================================
 
 
-
-import { last, words } from '@mathigon/core'
-import { SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, BRACKETS } from './symbols'
-import { ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprTerm } from "./elements";
-import { ExprFunction } from "./functions";
-import { ExprError } from "./errors";
-
+import {last, words} from '@mathigon/core';
+import {SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, BRACKETS} from './symbols';
+import {ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprTerm, ExprElement} from './elements';
+import {ExprFunction} from './functions';
+import {ExprError} from './errors';
 
 
 // -----------------------------------------------------------------------------
 // Tokenizer
 
-function createToken(buffer, type) {
+enum TokenType {UNKNOWN, SPACE, STR, NUM, VAR, OP}
+
+
+function createToken(buffer: string, type: TokenType) {
   if (!buffer || !type) return null;
 
-  if (type === 'SPACE' && buffer.length > 1) return new ExprSpace();
-  if (type === 'STR') return new ExprString(buffer);
+  if (type === TokenType.SPACE && buffer.length > 1) return new ExprSpace();
+  if (type === TokenType.STR) return new ExprString(buffer);
 
-  if (type === 'NUM') {
+  if (type === TokenType.NUM) {
     // This can happen if users simply type ".", which get parsed as number.
     if (isNaN(+buffer)) throw ExprError.invalidExpression();
     return new ExprNumber(+buffer);
   }
 
-  if (type === 'VAR') {
+  if (type === TokenType.VAR) {
     if (buffer in SPECIAL_IDENTIFIERS) {
-      return new ExprIdentifier(SPECIAL_IDENTIFIERS[buffer])
+      return new ExprIdentifier(SPECIAL_IDENTIFIERS[buffer]);
     } else if (buffer in SPECIAL_OPERATORS) {
-      return new ExprOperator(SPECIAL_OPERATORS[buffer])
+      return new ExprOperator(SPECIAL_OPERATORS[buffer]);
     } else {
       return new ExprIdentifier(buffer);
     }
   }
 
-  if (type === 'OP') {
+  if (type === TokenType.OP) {
     if (buffer in SPECIAL_OPERATORS) {
-      return new ExprOperator(SPECIAL_OPERATORS[buffer])
+      return new ExprOperator(SPECIAL_OPERATORS[buffer]);
     } else {
       return new ExprOperator(buffer);
     }
   }
 }
 
-export function tokenize(str) {
+export function tokenize(str: string) {
   const tokens = [];
   let buffer = '';
-  let type = '';  // NUM, VAR, OP, SPACE, STR
+  let type = TokenType.UNKNOWN;
 
   for (let s of str) {
 
     // Handle Strings
     if (s === '"') {
-      const newType = (type === 'STR') ? '' : 'STR';
+      const newType: TokenType = (((type as TokenType) === TokenType.STR) ? TokenType.UNKNOWN : TokenType.STR);
       const token = createToken(buffer, type);
       if (token) tokens.push(token);
       buffer = '';
       type = newType;
       continue;
-    } else if (type === 'STR') {
+    } else if ((type as TokenType) === TokenType.STR) {
       buffer += s;
       continue;
     }
 
-    const sType = s.match(/[0-9.]/) ? 'NUM' : IDENTIFIER_SYMBOLS.includes(s) ? 'VAR' :
-        OPERATOR_SYMBOLS.includes(s) ? 'OP' : s.match(/\s/) ? 'SPACE' : '';
+    const sType = s.match(/[0-9.]/) ? TokenType.NUM : IDENTIFIER_SYMBOLS.includes(s) ? TokenType.VAR :
+      OPERATOR_SYMBOLS.includes(s) ? TokenType.OP : s.match(/\s/) ? TokenType.SPACE : TokenType.UNKNOWN;
     if (!sType) throw ExprError.invalidCharacter(s);
 
-    if (!type || (type === 'NUM' && sType !== 'NUM') ||
-        (type === 'VAR' && sType !== 'VAR' && sType !== 'NUM') ||
-        (type === 'OP' && !((buffer + s) in SPECIAL_OPERATORS)) ||
-        (type === 'SPACE' && sType !== 'SPACE')) {
+    if (!type || (type === TokenType.NUM && sType !== TokenType.NUM) ||
+      (type === TokenType.VAR && sType !== TokenType.VAR && sType !== TokenType.NUM) ||
+      (type === TokenType.OP && !((buffer + s) in SPECIAL_OPERATORS)) ||
+      (type === TokenType.SPACE && sType !== TokenType.SPACE)) {
       const token = createToken(buffer, type);
       if (token) tokens.push(token);
       buffer = '';
@@ -94,14 +95,14 @@ export function tokenize(str) {
 // -----------------------------------------------------------------------------
 // Utility Functions
 
-function makeTerm(items) {
+function makeTerm(items: ExprElement[]) {
   if (items.length > 1) return new ExprTerm(items);
   if (items[0] instanceof ExprOperator) return new ExprTerm(items);
   return items[0];
 }
 
-function splitArray(items, check) {
-  const result = [[]];
+function splitArray(items: ExprElement[], check: (x: ExprElement) => boolean) {
+  const result: ExprElement[][] = [[]];
   for (let i of items) {
     if (check(i)) {
       result.push([]);
@@ -112,28 +113,29 @@ function splitArray(items, check) {
   return result;
 }
 
-function isOperator(expr, fns) {
+function isOperator(expr: ExprElement, fns: string) {
   return expr instanceof ExprOperator && words(fns).includes(expr.o);
 }
 
-function removeBrackets(expr) {
+function removeBrackets(expr: ExprElement) {
   return (expr instanceof ExprFunction && expr.fn === '(') ? expr.args[0] : expr;
 }
 
-function findBinaryFunction(tokens, fn, toFn) {
+function findBinaryFunction(tokens: ExprElement[], fn: string, toFn?: string) {
   if (isOperator(tokens[0], fn)) throw ExprError.startOperator(tokens[0]);
   if (isOperator(last(tokens), fn)) throw ExprError.endOperator(last(tokens));
 
   for (let i = 1; i < tokens.length - 1; ++i) {
     if (!isOperator(tokens[i], fn)) continue;
+    const token = tokens[i] as ExprOperator;
 
     const a = tokens[i - 1];
     const b = tokens[i + 1];
-    if (a instanceof ExprOperator) throw ExprError.consecutiveOperators(a.o, tokens[i].o);
-    if (b instanceof ExprOperator) throw ExprError.consecutiveOperators(tokens[i].o, b.o);
+    if (a instanceof ExprOperator) throw ExprError.consecutiveOperators(a.o, token.o);
+    if (b instanceof ExprOperator) throw ExprError.consecutiveOperators(token.o, b.o);
 
     const args = [removeBrackets(a), removeBrackets(b)];
-    tokens.splice(i - 1, 3, new ExprFunction(toFn || tokens[i].o, args));
+    tokens.splice(i - 1, 3, new ExprFunction(toFn || token.o, args));
     i -= 2;
   }
 }
@@ -142,7 +144,7 @@ function findBinaryFunction(tokens, fn, toFn) {
 // -----------------------------------------------------------------------------
 // Match Brackets
 
-function prepareTerm(tokens) {
+function prepareTerm(tokens: ExprElement[]) {
   // TODO Combine sup and sub calls into a single supsub function.
   findBinaryFunction(tokens, '^', 'sup');
   findBinaryFunction(tokens, '_', 'sub');
@@ -150,16 +152,16 @@ function prepareTerm(tokens) {
   return makeTerm(tokens);
 }
 
-export function matchBrackets(tokens) {
-  const stack = [[]];
+export function matchBrackets(tokens: ExprElement[]) {
+  const stack: ExprElement[][] = [[]];
 
   for (let t of tokens) {
-    const lastOpen = last(stack).length ? last(stack)[0].o : null;
+    const lastOpen = last(stack).length ? (last(stack)[0] as ExprOperator).o : null;
 
     if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
 
-      if (!isOperator(t, BRACKETS[lastOpen]))
-        throw ExprError.conflictingBrackets(t.o);
+      if (!isOperator(t, BRACKETS[lastOpen!]))
+        throw ExprError.conflictingBrackets((t as ExprOperator).o);
 
       const closed = stack.pop();
       const term = last(stack);
@@ -167,11 +169,11 @@ export function matchBrackets(tokens) {
       // Check if this is a normal bracket, or a function call.
       // Terms like x(y) are treated as functions, rather than implicit
       // multiplication, except for π(y).
-      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier && last(term).i !== 'π');
-      const fnName = isFn ? term.pop().i : isOperator(t, '|') ? 'abs' : closed[0].o;
+      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier && (last(term) as ExprIdentifier).i !== 'π');
+      const fnName = isFn ? (term.pop() as ExprIdentifier).i : isOperator(t, '|') ? 'abs' : (closed![0] as ExprOperator).o;
 
       // Support multiple arguments for function calls.
-      const args = splitArray(closed.slice(1), a => isOperator(a, ','));
+      const args = splitArray(closed!.slice(1), a => isOperator(a, ','));
       term.push(new ExprFunction(fnName, args.map(prepareTerm)));
 
     } else if (isOperator(t, '( [ { |')) {
@@ -182,7 +184,7 @@ export function matchBrackets(tokens) {
     }
   }
 
-  if (stack.length > 1) throw ExprError.unclosedBracket(last(stack)[0].o);
+  if (stack.length > 1) throw ExprError.unclosedBracket((last(stack)[0] as ExprOperator).o);
   return prepareTerm(stack[0]);
 }
 
@@ -190,9 +192,9 @@ export function matchBrackets(tokens) {
 // -----------------------------------------------------------------------------
 // Collapse term items
 
-function findAssociativeFunction(tokens, symbol, implicit=false) {
-  const result = [];
-  let buffer = [];
+function findAssociativeFunction(tokens: ExprElement[], symbol: string, implicit = false) {
+  const result: ExprElement[] = [];
+  let buffer: ExprElement[] = [];
   let lastWasSymbol = false;
 
   function clearBuffer() {
@@ -224,16 +226,16 @@ function findAssociativeFunction(tokens, symbol, implicit=false) {
   return result;
 }
 
-export function collapseTerm(tokens) {
+export function collapseTerm(tokens: ExprElement[]) {
   // Filter out whitespace.
   tokens = tokens.filter(t => !(t instanceof ExprSpace));
   if (!tokens.length) throw ExprError.invalidExpression();
 
   // Match percentage and factorial operators.
-  if (isOperator(tokens[0], '%!')) throw ExprError.startOperator(tokens[0].o);
+  if (isOperator(tokens[0], '%!')) throw ExprError.startOperator(tokens[0]);
   for (let i = 0; i < tokens.length; ++i) {
     if (!isOperator(tokens[i], '%!')) continue;
-    tokens.splice(i - 1, 2, new ExprFunction(tokens[i].o, [tokens[i - 1]]));
+    tokens.splice(i - 1, 2, new ExprFunction((tokens[i] as ExprOperator).o, [tokens[i - 1]]));
     i -= 1;
   }
 
@@ -246,7 +248,7 @@ export function collapseTerm(tokens) {
 
   // Match - and ± operators.
   if (isOperator(tokens[0], '− ±')) {
-    tokens.splice(0, 2, new ExprFunction(tokens[0].o, [tokens[1]]));
+    tokens.splice(0, 2, new ExprFunction((tokens[0] as ExprOperator).o, [tokens[1]]));
   }
   findBinaryFunction(tokens, '− ±');
 

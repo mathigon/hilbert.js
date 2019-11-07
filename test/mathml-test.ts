@@ -4,15 +4,16 @@
 // =============================================================================
 
 
-
-const tape = require('tape');
-const hilbert = require('../');
-
-const expr = (src) => hilbert.Expression.parse(src);
-const mathML = (src, replace = {}) => expr(src).toMathML(replace);
+import * as tape from 'tape';
+import {Expression} from '../index';
+import {MathMLArgument, ExprString} from '../src/elements';
 
 
-tape('Basic', function(test) {
+const expr = (src: string) => Expression.parse(src);
+const mathML = (src: string, replace = {}) => expr(src).toMathML(replace);
+
+
+tape('Basic', (test) => {
   test.equal(mathML('42'), '<mn>42</mn>');
   test.equal(mathML('3.141592654'), '<mn>3.141592654</mn>');
   test.equal(mathML('x'), '<mi>x</mi>');
@@ -26,18 +27,18 @@ tape('Basic', function(test) {
   test.end();
 });
 
-tape('HTML Characters', function(test) {
+tape('HTML Characters', (test) => {
   test.equal(mathML('a < b'), '<mi>a</mi><mo value="&lt;">&lt;</mo><mi>b</mi>');
   test.equal(mathML('a > b'), '<mi>a</mi><mo value="&gt;">&gt;</mo><mi>b</mi>');
   test.equal(mathML('a ≥ b'), '<mi>a</mi><mo value="≥">≥</mo><mi>b</mi>');
   test.end();
 });
 
-tape('Custom Functions', function(test) {
+tape('Custom Functions', (test) => {
   const options = {
-    a: (a) => `<a>${a}</a>`,
-    b: (...b) => `<b>${b.join(',')}</b>`,
-    c: (c) => `<c attr="${c.val.s}">${c}</c>`
+    a: (a: MathMLArgument) => `<a>${a}</a>`,
+    b: (...b: MathMLArgument[]) => `<b>${b.join(',')}</b>`,
+    c: (c: MathMLArgument) => `<c attr="${(c.val as ExprString).s}">${c}</c>`
   };
 
   test.equal(mathML('a(1)', options), '<a><mn>1</mn></a>');
@@ -47,13 +48,13 @@ tape('Custom Functions', function(test) {
 });
 
 
-tape('Whitespace', function(test) {
+tape('Whitespace', (test) => {
   test.equal(mathML('a  b'), '<mi>a</mi><mspace/><mi>b</mi>');
   test.equal(mathML('a b'), '<mi>a</mi><mi>b</mi>');
   test.end();
 });
 
-tape('Functions', function(test) {
+tape('Functions', function (test) {
   test.equal(mathML('sin(a + b)'), '<mi mathvariant="normal">sin</mi><mfenced><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('tan = sin/cos'), '<mi mathvariant="normal">tan</mi><mo value="=">=</mo><mfrac><mi mathvariant="normal">sin</mi><mi mathvariant="normal">cos</mi></mfrac>');
   test.equal(mathML('sinh(x) = (e^x - e^(-x))/2'), '<mi mathvariant="normal">sinh</mi><mfenced><mi>x</mi></mfenced><mo value="=">=</mo><mfrac><mrow><msup><mi>e</mi><mi>x</mi></msup><mo value="−">−</mo><msup><mi>e</mi><mrow><mo value="−">−</mo><mi>x</mi></mrow></msup></mrow><mn>2</mn></mfrac>');
@@ -64,7 +65,7 @@ tape('Functions', function(test) {
   test.end();
 });
 
-tape('Fractions', function(test) {
+tape('Fractions', (test) => {
   test.equal(mathML('a/b'), '<mfrac><mi>a</mi><mi>b</mi></mfrac>');
   test.equal(mathML('a//b'), '<mi>a</mi><mo value="/">/</mo><mi>b</mi>');
   test.equal(mathML('(a+b)/(c+d)'), '<mfrac><mrow><mi>a</mi><mo value="+">+</mo><mi>b</mi></mrow><mrow><mi>c</mi><mo value="+">+</mo><mi>d</mi></mrow></mfrac>');
@@ -72,7 +73,7 @@ tape('Fractions', function(test) {
   test.end();
 });
 
-tape('Super and Subscripts', function(test) {
+tape('Super and Subscripts', (test) => {
   test.equal(mathML('a_i'), '<msub><mi>a</mi><mi>i</mi></msub>');
   test.equal(mathML('a^2'), '<msup><mi>a</mi><mn>2</mn></msup>');
   test.equal(mathML('a^2 + b^2 = c^2'), '<msup><mi>a</mi><mn>2</mn></msup><mo value="+">+</mo><msup><mi>b</mi><mn>2</mn></msup><mo value="=">=</mo><msup><mi>c</mi><mn>2</mn></msup>');
@@ -82,7 +83,7 @@ tape('Super and Subscripts', function(test) {
   test.end();
 });
 
-tape('Roots', function(test) {
+tape('Roots', (test) => {
   test.equal(mathML('sqrt(x)'), '<msqrt><mi>x</mi></msqrt>');
   test.equal(mathML('root(x, 3)'), '<mroot><mi>x</mi><mn>3</mn></mroot>');
   test.equal(mathML('sqrt(2) ~~ 1.414213562'), '<msqrt><mn>2</mn></msqrt><mo value="≈">≈</mo><mn>1.414213562</mn>');
@@ -92,7 +93,7 @@ tape('Roots', function(test) {
   test.end();
 });
 
-tape('Groupings', function(test) {
+tape('Groupings', (test) => {
   test.equal(mathML('(a+b)'), '<mfenced open="(" close=")"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('|a+b|'), '<mfenced open="|" close="|"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('a,b,c'), '<mi>a</mi><mo value=",">,</mo><mi>b</mi><mo value=",">,</mo><mi>c</mi>');

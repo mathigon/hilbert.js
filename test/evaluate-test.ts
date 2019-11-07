@@ -4,21 +4,21 @@
 // =============================================================================
 
 
-
-const tape = require('tape');
-const hilbert = require('../');
-
-const expr = (src) => hilbert.Expression.parse(src);
-const value = (src, vars) => expr(src).evaluate(vars || {});
+import * as tape from 'tape';
+import {Expression} from '../index';
 
 
-tape('Basic', function(test) {
+const expr = (src: string) => Expression.parse(src);
+const value = (src: string, vars?: { [key: string]: number }) => expr(src).evaluate(vars || {});
+
+
+tape('Basic', (test) => {
   test.equal(value('42'), 42);
   test.equal(value('x', {x: 10}), 10);
   test.end();
 });
 
-tape('Functions', function(test) {
+tape('Functions', (test) => {
   test.equal(value('2 + 3'), 5);
   test.equal(value('7 - 3'), 4);
   test.equal(value('2 * 3'), 6);
@@ -29,7 +29,7 @@ tape('Functions', function(test) {
   test.end();
 });
 
-tape('Order and Brackets', function(test) {
+tape('Order and Brackets', (test) => {
   test.equal(value('2 a b', {a: 3, b: 5}), 30);
   test.equal(value('2 +  3  + 5'), 10);
   test.equal(value('2 + 3 * 5'), 17);
@@ -42,7 +42,7 @@ tape('Order and Brackets', function(test) {
   test.end();
 });
 
-tape('Invalid', function(test) {
+tape('Invalid', (test) => {
   test.throws(() => value('* 3'));
   test.throws(() => value('3 /'));
   test.throws(() => value('2 + (3 *)'));

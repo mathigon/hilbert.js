@@ -4,17 +4,16 @@
 // =============================================================================
 
 
-
-import { unique, flatten, words, isOneOf } from '@mathigon/core'
-import { BRACKETS, escape, isSpecialFunction } from './symbols'
-import { ExprElement, ExprTerm, ExprNumber } from './elements'
-import { ExprError } from './errors'
+import {unique, flatten, words, isOneOf} from '@mathigon/core';
+import {BRACKETS, escape, isSpecialFunction} from './symbols';
+import {ExprElement, ExprTerm, ExprNumber, CustomFunction, MathMLMap, VarMap, ExprMap} from './elements';
+import {ExprError} from './errors';
 
 
 const PRECEDENCE = words('+ − * × · / ÷ // sup sub');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 
-function needsBrackets(expr, parentFn) {
+function needsBrackets(expr: ExprElement, parentFn: string): boolean {
   if (!PRECEDENCE.includes(parentFn)) return false;
   if (expr instanceof ExprTerm) return true;
   if (!(expr instanceof ExprFunction)) return false;
@@ -22,11 +21,11 @@ function needsBrackets(expr, parentFn) {
   return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr.fn);
 }
 
-function addMFence(expr, fn, string) {
+function addMFence(expr: ExprElement, fn: string, string: string) {
   return needsBrackets(expr, fn) ? `<mfenced>${string}</mfenced>` : string;
 }
 
-function addMRow(expr, string) {
+function addMRow(expr: ExprElement, string: string) {
   const needsRow = (expr instanceof ExprTerm) || (expr instanceof ExprFunction);
   return needsRow ? `<mrow>${string}</mrow>` : string;
 }
@@ -34,38 +33,48 @@ function addMRow(expr, string) {
 
 export class ExprFunction extends ExprElement {
 
-  constructor(fn, args=[]) {
+  constructor(readonly fn: string, readonly args: ExprElement[] = []) {
     super();
-    this.fn = fn;
-    this.args = args;
   }
 
-  evaluate(vars={}) {
+  evaluate(vars: VarMap = {}) {
     const args = this.args.map(a => a.evaluate(vars));
-    if (this.fn in vars) return vars[this.fn](...args);
+    if (this.fn in vars) return (vars[this.fn] as CustomFunction)(...args);
 
-    switch(this.fn) {
-      case '+': return args.reduce((a, b) => a + b, 0);
-      case '−': return (args.length > 1) ? args[0] - args[1] : -args[0];
+    switch (this.fn) {
+      case '+':
+        return args.reduce((a, b) => a + b, 0);
+      case '−':
+        return (args.length > 1) ? args[0] - args[1] : -args[0];
       case '*':
       case '·':
-      case '×': return args.reduce((a, b) => a * b, 1);
-      case '/': return args[0] / args[1];
-      case 'sin': return Math.sin(args[0]);
-      case 'cos': return Math.sin(args[0]);
-      case 'tan': return Math.sin(args[0]);
-      case 'log': return Math.log(args[0]) / Math.log(args[1] || Math.E);
-      case 'sup': return Math.pow(args[0], args[1]);
-      case 'sqrt': return Math.sqrt(args[0]);
-      case 'root': return Math.pow(args[0], 1 / args[1]);
-      case '(': return args[0];
+      case '×':
+        return args.reduce((a, b) => a * b, 1);
+      case '/':
+        return args[0] / args[1];
+      case 'sin':
+        return Math.sin(args[0]);
+      case 'cos':
+        return Math.sin(args[0]);
+      case 'tan':
+        return Math.sin(args[0]);
+      case 'log':
+        return Math.log(args[0]) / Math.log(args[1] || Math.E);
+      case 'sup':
+        return Math.pow(args[0], args[1]);
+      case 'sqrt':
+        return Math.sqrt(args[0]);
+      case 'root':
+        return Math.pow(args[0], 1 / args[1]);
+      case '(':
+        return args[0];
       // TODO Implement for all functions
     }
 
     throw ExprError.undefinedFunction(this.fn);
   }
 
-  substitute(vars={}) {
+  substitute(vars: ExprMap = {}) {
     return new ExprFunction(this.fn, this.args.map(a => a.substitute(vars)));
   }
 
@@ -89,7 +98,7 @@ export class ExprFunction extends ExprElement {
 
   toString() {
     const args = this.args.map(a => needsBrackets(a, this.fn) ?
-        '(' + a.toString() + ')' : a.toString());
+      '(' + a.toString() + ')' : a.toString());
 
     if (this.fn === '−')
       return args.length > 1 ? args.join(' − ') : '−' + args[0];
@@ -109,17 +118,20 @@ export class ExprFunction extends ExprElement {
     return `${this.fn}(${args.join(', ')})`;
   }
 
-  toMathML(custom={}) {
+  toMathML(custom: MathMLMap = {}) {
     const args = this.args.map(a => a.toMathML(custom));
     const argsF = this.args.map((a, i) => addMFence(a, this.fn, args[i]));
 
     if (this.fn in custom) {
-      const argsX = args.map((a, i) => ({toString: () => a, val: this.args[i]}));
+      const argsX = args.map((a, i) => ({
+        toString: () => a,
+        val: this.args[i]
+      }));
       return custom[this.fn](...argsX);
     }
 
     if (this.fn === '−') return argsF.length > 1 ?
-        argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
+      argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
 
     if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥', '≈')) {
       const fn = escape(this.fn);

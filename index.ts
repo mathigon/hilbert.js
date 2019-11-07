@@ -1,9 +1,8 @@
 // =============================================================================
-// Hilbert.js
+// Hilbert.js Index
 // (c) Mathigon
 // =============================================================================
 
 
-
-export { ExprError } from './src/errors'
-export { Expression } from './src/expression'
+export {ExprError} from './src/errors';
+export {Expression} from './src/expression';

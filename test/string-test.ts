@@ -4,14 +4,14 @@
 // =============================================================================
 
 
-
-const tape = require('tape');
-const hilbert = require('../');
-
-const str = (src) => hilbert.Expression.parse(src).collapse().toString();
+import * as tape from 'tape';
+import {Expression} from '../index';
 
 
-tape('Precedence', function(test) {
+const str = (src: string) => Expression.parse(src).collapse().toString();
+
+
+tape('Precedence', (test) => {
   test.equal(str('(a × b) + c'), 'a × b + c');
   test.equal(str('a × (b + c)'), 'a × (b + c)');
   test.equal(str('((a^b))'), 'a^b');
