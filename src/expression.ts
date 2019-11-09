@@ -4,10 +4,10 @@
 // =============================================================================
 
 
-import {unique, cache} from '@mathigon/core';
+import {unique, cache, Obj} from '@mathigon/core';
 import {nearlyEquals} from '@mathigon/fermat';
 import {ExprElement} from './elements';
-import {CONSTANTS, NumberMap} from './symbols';
+import {CONSTANTS} from './symbols';
 import {tokenize, matchBrackets} from './parser';
 
 
@@ -30,7 +30,7 @@ function numEquals(expr1: ExprElement, expr2: ExprElement) {
     // We only test positive random numbers, because negative numbers raised
     // to non-integer powers return NaN.
     for (let i = 0; i < 5; ++i) {
-      const substitution: NumberMap = {};
+      const substitution: Obj<number> = {};
       for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
       const a = fn1.evaluate(substitution);
       const b = fn2.evaluate(substitution);

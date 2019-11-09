@@ -4,12 +4,13 @@
 // =============================================================================
 
 
+import {Obj} from '@mathigon/core';
 import * as tape from 'tape';
 import {Expression} from '../index';
 
 
 const expr = (src: string) => Expression.parse(src);
-const value = (src: string, vars?: {[key: string]: number}) => expr(src)
+const value = (src: string, vars?: Obj<number>) => expr(src)
     .evaluate(vars || {});
 
 

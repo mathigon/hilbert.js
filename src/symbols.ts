@@ -4,24 +4,23 @@
 // =============================================================================
 
 
-export type NumberMap = {[key: string]: number};
-export type StringMap = {[key: string]: string};
+import {Obj} from '@mathigon/core';
 
 
-export const CONSTANTS: NumberMap = {
+export const CONSTANTS: Obj<number> = {
   pi: Math.PI,
   π: Math.PI,
   e: Math.E
 };
 
-export const BRACKETS: StringMap = {
+export const BRACKETS: Obj<string> = {
   '(': ')',
   '[': ']',
   '{': '}',
   '|': '|'
 };
 
-export const SPECIAL_OPERATORS: StringMap = {
+export const SPECIAL_OPERATORS: Obj<string> = {
   '*': '·',
   '**': '∗',
   '//': '//',
@@ -69,7 +68,7 @@ export const SPECIAL_OPERATORS: StringMap = {
   ZZ: 'ℤ'
 };
 
-export const SPECIAL_IDENTIFIERS: StringMap = {
+export const SPECIAL_IDENTIFIERS: Obj<string> = {
   Gamma: 'Γ',
   Delta: 'Δ',
   Theta: 'Θ',
@@ -115,7 +114,7 @@ const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…°•∥⊥\'∠:%∼△';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 export const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
 
-const ESCAPES: StringMap = {
+const ESCAPES: Obj<string> = {
   '<': '&lt;',
   '>': '&gt;'
 };

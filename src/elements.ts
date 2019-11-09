@@ -4,7 +4,7 @@
 // =============================================================================
 
 
-import {join, unique} from '@mathigon/core';
+import {join, Obj, unique} from '@mathigon/core';
 import {CONSTANTS, escape, isSpecialFunction} from './symbols';
 import {collapseTerm} from './parser';
 import {ExprError} from './errors';
@@ -16,9 +16,9 @@ export interface MathMLArgument {
 }
 
 export type CustomFunction = ((...args: number[]) => number);
-export type VarMap = {[key: string]: number|CustomFunction};
-export type ExprMap = {[key: string]: ExprElement};
-export type MathMLMap = {[key: string]: (...args: MathMLArgument[]) => string};
+export type VarMap = Obj<number|CustomFunction>;
+export type ExprMap = Obj<ExprElement>;
+export type MathMLMap = Obj<(...args: MathMLArgument[]) => string>;
 
 
 /**
