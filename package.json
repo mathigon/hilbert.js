@@ -15,12 +15,13 @@
     "email": "dev@mathigon.org",
     "url": "https://mathigon.org"
   },
-  "module": "index",
-  "jsnext:main": "index",
+  "main": "dist/hilbert.js",
+  "module": "index.ts",
   "repository": "mathigon/hilbert.js",
   "scripts": {
     "test": "ts-node node_modules/tape/bin/tape test/**/*.ts",
-    "prepublish": "npm test"
+    "prepublish": "npm test && npm run build",
+    "build": "rollup --config"
   },
   "dependencies": {
     "@mathigon/fermat": "^0.3.1",
@@ -28,8 +29,11 @@
   },
   "devDependencies": {
     "@types/tape": "^4.2.33",
+    "rollup": "^1.26.4",
+    "rollup-plugin-typescript": "^1.0.1",
     "tape": "^4.11.0",
     "ts-node": "^8.4.1",
+    "tslib": "^1.10.0",
     "typescript": "^3.7.2"
   }
 }
