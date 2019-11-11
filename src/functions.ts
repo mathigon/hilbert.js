@@ -4,9 +4,10 @@
 // =============================================================================
 
 
-import {unique, flatten, words, isOneOf} from '@mathigon/core';
+import {unique, flatten, words, isOneOf, join} from '@mathigon/core';
+import {collapseTerm} from './parser';
 import {BRACKETS, escape, isSpecialFunction} from './symbols';
-import {ExprElement, ExprTerm, ExprNumber, CustomFunction, MathMLMap, VarMap, ExprMap} from './elements';
+import {ExprElement, ExprNumber, CustomFunction, MathMLMap, VarMap, ExprMap} from './elements';
 import {ExprError} from './errors';
 
 
@@ -190,4 +191,31 @@ export class ExprFunction extends ExprElement {
     return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(
         COMMA)}</mfenced>`;
   }
+}
+
+// -----------------------------------------------------------------------------
+
+export class ExprTerm extends ExprElement {
+
+  constructor(readonly items: ExprElement[]) {
+    super();
+  }
+
+  evaluate(vars: VarMap = {}) { return this.collapse().evaluate(vars); }
+
+  substitute(vars: ExprMap = {}) { return this.collapse().substitute(vars); }
+
+  get simplified() { return this.collapse().simplified; }
+
+  get variables() { return unique(join(...this.items.map(i => i.variables))); }
+
+  get functions() { return this.collapse().functions; }
+
+  toString() { return this.items.map(i => i.toString()).join(' '); }
+
+  toMathML(custom: MathMLMap = {}) {
+    return this.items.map(i => i.toMathML(custom)).join('');
+  }
+
+  collapse() { return collapseTerm(this.items).collapse(); }
 }

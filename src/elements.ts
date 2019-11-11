@@ -4,9 +4,8 @@
 // =============================================================================
 
 
-import {join, Obj, unique} from '@mathigon/core';
+import {Obj} from '@mathigon/core';
 import {CONSTANTS, escape, isSpecialFunction} from './symbols';
-import {collapseTerm} from './parser';
 import {ExprError} from './errors';
 
 
@@ -127,29 +126,4 @@ export class ExprOperator extends ExprElement {
     const op = escape(this.toString());
     return `<mo value="${op}">${op}</mo>`;
   }
-}
-
-export class ExprTerm extends ExprElement {
-
-  constructor(readonly items: ExprElement[]) {
-    super();
-  }
-
-  evaluate(vars: VarMap = {}) { return this.collapse().evaluate(vars); }
-
-  substitute(vars: ExprMap = {}) { return this.collapse().substitute(vars); }
-
-  get simplified() { return this.collapse().simplified; }
-
-  get variables() { return unique(join(...this.items.map(i => i.variables))); }
-
-  get functions() { return this.collapse().functions; }
-
-  toString() { return this.items.map(i => i.toString()).join(' '); }
-
-  toMathML(custom: MathMLMap = {}) {
-    return this.items.map(i => i.toMathML(custom)).join('');
-  }
-
-  collapse() { return collapseTerm(this.items).collapse(); }
 }

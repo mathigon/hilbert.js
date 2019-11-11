@@ -6,8 +6,8 @@
 
 import {last, words} from '@mathigon/core';
 import {SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, BRACKETS} from './symbols';
-import {ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprTerm, ExprElement} from './elements';
-import {ExprFunction} from './functions';
+import {ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprElement} from './elements';
+import {ExprFunction, ExprTerm} from './functions';
 import {ExprError} from './errors';
 
 
