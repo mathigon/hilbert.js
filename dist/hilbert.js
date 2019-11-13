@@ -862,22 +862,6 @@ class ExprOperator extends ExprElement {
         return `<mo value="${op}">${op}</mo>`;
     }
 }
-class ExprTerm extends ExprElement {
-    constructor(items) {
-        super();
-        this.items = items;
-    }
-    evaluate(vars = {}) { return this.collapse().evaluate(vars); }
-    substitute(vars = {}) { return this.collapse().substitute(vars); }
-    get simplified() { return this.collapse().simplified; }
-    get variables() { return unique(join(...this.items.map(i => i.variables))); }
-    get functions() { return this.collapse().functions; }
-    toString() { return this.items.map(i => i.toString()).join(' '); }
-    toMathML(custom = {}) {
-        return this.items.map(i => i.toMathML(custom)).join('');
-    }
-    collapse() { return collapseTerm(this.items).collapse(); }
-}
 
 // =============================================================================
 const PRECEDENCE = words('+ − * × · / ÷ // sup sub');
@@ -1035,6 +1019,23 @@ class ExprFunction extends ExprElement {
         const variant = isSpecialFunction(this.fn) ? ' mathvariant="normal"' : '';
         return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
     }
+}
+// -----------------------------------------------------------------------------
+class ExprTerm extends ExprElement {
+    constructor(items) {
+        super();
+        this.items = items;
+    }
+    evaluate(vars = {}) { return this.collapse().evaluate(vars); }
+    substitute(vars = {}) { return this.collapse().substitute(vars); }
+    get simplified() { return this.collapse().simplified; }
+    get variables() { return unique(join(...this.items.map(i => i.variables))); }
+    get functions() { return this.collapse().functions; }
+    toString() { return this.items.map(i => i.toString()).join(' '); }
+    toMathML(custom = {}) {
+        return this.items.map(i => i.toMathML(custom)).join('');
+    }
+    collapse() { return collapseTerm(this.items).collapse(); }
 }
 
 // =============================================================================
@@ -1327,5 +1328,6 @@ const Expression = {
     parse: cache(parse)
 };
 
+exports.ExprElement = ExprElement;
 exports.ExprError = ExprError;
 exports.Expression = Expression;
