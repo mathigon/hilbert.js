@@ -18,7 +18,7 @@ enum TokenType {UNKNOWN, SPACE, STR, NUM, VAR, OP}
 
 
 function createToken(buffer: string, type: TokenType) {
-  if (!buffer || !type) return null;
+  if (!buffer || !type) return undefined;
 
   if (type === TokenType.SPACE && buffer.length > 1) return new ExprSpace();
   if (type === TokenType.STR) return new ExprString(buffer);
@@ -164,7 +164,7 @@ export function matchBrackets(tokens: ExprElement[]) {
 
   for (let t of tokens) {
     const lastOpen = last(stack).length ? (last(stack)[0] as ExprOperator).o :
-                     null;
+                     undefined;
 
     if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
 
