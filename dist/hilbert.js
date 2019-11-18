@@ -447,7 +447,7 @@ var Random;
     /** Generates a geometric random variable. */
     function geometric(p = 0.5) {
         if (p <= 0 || p > 1)
-            return null;
+            return undefined;
         return Math.floor(Math.log(Math.random()) / Math.log(1 - p));
     }
     Random.geometric = geometric;
@@ -491,9 +491,7 @@ var Random;
         let t = z + G + 0.5;
         return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
     }
-    /**
-     * Riemann-integrates a function from xMin to xMax, with an interval size dx.
-     */
+    /** Riemann-integrates fn(x) from xMin to xMax with an interval size dx. */
     function integrate(fn, xMin, xMax, dx = 1) {
         let result = 0;
         for (let x = xMin; x < xMax; x += dx) {
@@ -502,12 +500,7 @@ var Random;
         return result;
     }
     Random.integrate = integrate;
-    /**
-     * The chi CDF function.
-     * @param {number} chi
-     * @param {number} deg
-     * @returns {number}
-     */
+    /** The chi CDF function. */
     function chiCDF(chi, deg) {
         let int = integrate(t => Math.pow(t, (deg - 2) / 2) * Math.exp(-t / 2), 0, chi);
         return 1 - int / Math.pow(2, deg / 2) / gamma(deg / 2);
@@ -654,13 +647,13 @@ var Regression;
         if (data.length > 1) {
             for (const t of types) {
                 const params = t.regression(data);
-                const fn = t.fn.bind(null, params);
+                const fn = t.fn.bind(undefined, params);
                 const coeff = coefficient(data, fn);
                 if (coeff > threshold)
                     return { type: t.name, fn, params, coeff };
             }
         }
-        return { type: null, fn: () => { }, params: [], coeff: null };
+        return { type: undefined, fn: () => { }, params: [], coeff: undefined };
     }
     Regression.find = find;
 })(Regression || (Regression = {}));
@@ -1052,7 +1045,7 @@ var TokenType;
 })(TokenType || (TokenType = {}));
 function createToken(buffer, type) {
     if (!buffer || !type)
-        return null;
+        return undefined;
     if (type === TokenType.SPACE && buffer.length > 1)
         return new ExprSpace();
     if (type === TokenType.STR)
@@ -1188,7 +1181,7 @@ function matchBrackets(tokens) {
     const stack = [[]];
     for (let t of tokens) {
         const lastOpen = last(stack).length ? last(stack)[0].o :
-            null;
+            undefined;
         if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
             if (!isOperator(t, BRACKETS[lastOpen]))
                 throw ExprError.conflictingBrackets(t.o);
