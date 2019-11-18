@@ -1,6 +1,6 @@
-# Hilbert.js
+# Hilbert.ts
 
-Hilbert.js is a JavaScript library for expression parsing, simplification, and
+Hilbert.ts is a TypeScript library for expression parsing, simplification, and
 MathML rendering. It was developed for [Mathigon.org](https://mathigon.org), an
 award-winning mathematics education project.
 
@@ -9,8 +9,6 @@ award-winning mathematics education project.
 
 
 ## Open Issues
-
-Note: this library is still under development, and not ready for production use.
 
 * [ ] Support for functions with subscripts (e.g. `log_a(b)`).
 * [ ] Support for super+subscripts (e.g. `a_n^2` or `a^2_n`).
@@ -24,23 +22,19 @@ Note: this library is still under development, and not ready for production use.
 
 ## Usage
 
-First, install hilbert.js from [NPM](https://www.npmjs.com/package/@mathigon/hilbert)
+First, install Hilbert.ts from [NPM](https://www.npmjs.com/package/@mathigon/hilbert)
 using
 
-```npm install @mathigon/hilbert --save```
+```npm install @mathigon/hilbert```
 
-Hilbert.js uses [ES6 imports](http://2ality.com/2014/09/es6-modules-final.html).
-While some browsers and platforms now support this feature, we recommend using
-a transpiler such as [Babel](http://babeljs.io/) or [Rollup](https://rollupjs.org/). 
-Make sure that you configure your compiler to correctly resolve these imports.
-For Rollup, we recommend using the
-[rollup-plugin-node-resolve](https://github.com/rollup/rollup-plugin-node-resolve)
+We recommend using Hibert.ts together with [Rollup](https://rollupjs.org/), using
+using the [rollup-plugin-node-resolve](https://github.com/rollup/rollup-plugin-node-resolve)
 plugin.
 
 Now, simply import all functions and classes you need, using
 
 ```js
-import { Expression } from '@mathigon/hilbert'
+import {Expression} from '@mathigon/hilbert'
 ```
 
 
