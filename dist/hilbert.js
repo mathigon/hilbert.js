@@ -48,11 +48,7 @@ class ExprError extends Error {
 // =============================================================================
 /** Checks if x is strictly equal to any one of the following arguments. */
 function isOneOf(x, ...values) {
-    for (let v of values) {
-        if (x === v)
-            return true;
-    }
-    return false;
+    return values.includes(x);
 }
 /**
  * Function wrapper that modifies a function to cache its return values. This
@@ -364,14 +360,6 @@ var Random;
         return start + Math.floor(length * Math.random());
     }
     Random.integer = integer;
-    /** Generates an array of the integers from 0 to n in random order. */
-    function intArray(n) {
-        let a = [];
-        for (let i = 0; i < n; ++i)
-            a.push(i);
-        return shuffle(a);
-    }
-    Random.intArray = intArray;
     /** Chooses a random index value from weights [2, 5, 3] */
     function weighted(weights) {
         const x = Math.random() * total(weights);
