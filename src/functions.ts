@@ -4,9 +4,9 @@
 // =============================================================================
 
 
-import {unique, flatten, words, isOneOf, join} from '@mathigon/core';
+import {unique, flatten, words, isOneOf, join, Obj} from '@mathigon/core';
 import {collapseTerm} from './parser';
-import {BRACKETS, escape, isSpecialFunction} from './symbols';
+import {BRACKETS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
 import {ExprElement, ExprNumber, CustomFunction, MathMLMap, VarMap, ExprMap} from './elements';
 import {ExprError} from './errors';
 
@@ -191,6 +191,30 @@ export class ExprFunction extends ExprElement {
     return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(
         COMMA)}</mfenced>`;
   }
+
+  toVoice(custom: Obj<string> = {}) {
+    const args = this.args.map(a => a.toVoice(custom));
+    const joined = args.join(' ');
+
+    if (this.fn in custom && !custom[this.fn]) return joined;
+
+    if (isOneOf(this.fn, '(', '[', '{')) return `open bracket ${joined} close bracket`;
+
+    if (this.fn === 'sqrt') return `square root of ${joined}`;
+    if (this.fn === '%') return `${joined} percent`;
+    if (this.fn === '!') return `${joined} factorial`;
+    if (this.fn === '/') return `${args[0]} over ${args[1]}`;
+    if (this.fn === '//') return `${args[0]} divided by ${args[1]}`;
+    if (this.fn === 'sup') return `${args[0]} to the power of ${args[1]}`;
+    if (this.fn === 'sup') return `${args[0]} to the power of ${args[1]}`;
+    if (this.fn === 'sub') return joined;
+
+    if (VOICE_STRINGS[this.fn]) return args.join(` ${VOICE_STRINGS[this.fn]} `);
+    // TODO Implement other cases
+
+    if (isSpecialFunction(this.fn)) return `${this.fn} ${joined}`;
+    return `${this.fn} of ${joined}`;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -215,6 +239,10 @@ export class ExprTerm extends ExprElement {
 
   toMathML(custom: MathMLMap = {}) {
     return this.items.map(i => i.toMathML(custom)).join('');
+  }
+
+  toVoice(custom: Obj<string> = {}) {
+    return this.items.map(i => i.toVoice(custom)).join(' ');
   }
 
   collapse() { return collapseTerm(this.items).collapse(); }

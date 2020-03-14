@@ -5,7 +5,7 @@
 
 
 import {Obj} from '@mathigon/core';
-import {CONSTANTS, escape, isSpecialFunction} from './symbols';
+import {CONSTANTS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
 import {ExprError} from './errors';
 
 
@@ -47,6 +47,9 @@ export abstract class ExprElement {
   toString() { return ''; }
 
   /** Converts the expression to a MathML string. */
+  toVoice(custom: Obj<string> = {}) { return ''; }
+
+  /** Converts the expression to a MathML string. */
   toMathML(custom: MathMLMap = {}) { return ''; }
 }
 
@@ -61,6 +64,8 @@ export class ExprNumber extends ExprElement {
   evaluate() { return this.n; }
 
   toString() { return '' + this.n; }
+
+  toVoice() { return '' + this.n; }
 
   toMathML() { return `<mn>${this.n}</mn>`; }
 }
@@ -87,6 +92,10 @@ export class ExprIdentifier extends ExprElement {
   get variables() { return [this.i]; }
 
   toString() { return this.i; }
+
+  toVoice(custom: Obj<string> = {}) {
+    return (this.i in custom) ? custom[this.i] : VOICE_STRINGS[this.i] || this.i;
+  }
 }
 
 export class ExprString extends ExprElement {
@@ -101,6 +110,8 @@ export class ExprString extends ExprElement {
   }
 
   toString() { return '"' + this.s + '"'; }
+
+  toVoice() { return this.s; }
 
   toMathML() { return `<mtext>${this.s}</mtext>`; }
 }
@@ -119,6 +130,10 @@ export class ExprOperator extends ExprElement {
   }
 
   toString() { return this.o.replace('//', '/'); }
+
+  toVoice(custom: Obj<string> = {}) {
+    return (this.o in custom) ? custom[this.o] : VOICE_STRINGS[this.o] || this.o;
+  }
 
   get functions() { return [this.o]; }
 

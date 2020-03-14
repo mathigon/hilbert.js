@@ -761,6 +761,24 @@ const SPECIAL = new Set(['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin',
 function isSpecialFunction(fn) {
     return SPECIAL.has(fn);
 }
+const VOICE_STRINGS = {
+    '+': 'plus',
+    '−': 'minus',
+    '·': 'times',
+    '×': 'times',
+    '/': 'over',
+    '//': 'divided by',
+    '%': 'percent',
+    '!': 'factorial',
+    '±': 'plus-minus',
+    '=': 'equals',
+    '≠': 'does not equal',
+    '<': 'is less than',
+    '>': 'is greater than',
+    '≤': 'is less than or equal to',
+    '≥': 'is greater than or equal to',
+    'π': 'pi'
+};
 
 // =============================================================================
 /**
@@ -782,6 +800,8 @@ class ExprElement {
     /** Converts the expression to a plain text string. */
     toString() { return ''; }
     /** Converts the expression to a MathML string. */
+    toVoice(custom = {}) { return ''; }
+    /** Converts the expression to a MathML string. */
     toMathML(custom = {}) { return ''; }
 }
 // -----------------------------------------------------------------------------
@@ -792,6 +812,7 @@ class ExprNumber extends ExprElement {
     }
     evaluate() { return this.n; }
     toString() { return '' + this.n; }
+    toVoice() { return '' + this.n; }
     toMathML() { return `<mn>${this.n}</mn>`; }
 }
 class ExprIdentifier extends ExprElement {
@@ -813,6 +834,9 @@ class ExprIdentifier extends ExprElement {
     substitute(vars = {}) { return vars[this.i] || this; }
     get variables() { return [this.i]; }
     toString() { return this.i; }
+    toVoice(custom = {}) {
+        return (this.i in custom) ? custom[this.i] : VOICE_STRINGS[this.i] || this.i;
+    }
 }
 class ExprString extends ExprElement {
     constructor(s) {
@@ -825,6 +849,7 @@ class ExprString extends ExprElement {
         throw ExprError.undefinedVariable(this.s);
     }
     toString() { return '"' + this.s + '"'; }
+    toVoice() { return this.s; }
     toMathML() { return `<mtext>${this.s}</mtext>`; }
 }
 class ExprSpace extends ExprElement {
@@ -837,6 +862,9 @@ class ExprOperator extends ExprElement {
         this.o = o;
     }
     toString() { return this.o.replace('//', '/'); }
+    toVoice(custom = {}) {
+        return (this.o in custom) ? custom[this.o] : VOICE_STRINGS[this.o] || this.o;
+    }
     get functions() { return [this.o]; }
     toMathML() {
         const op = escape(this.toString());
@@ -1000,6 +1028,36 @@ class ExprFunction extends ExprElement {
         const variant = isSpecialFunction(this.fn) ? ' mathvariant="normal"' : '';
         return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
     }
+    toVoice(custom = {}) {
+        const args = this.args.map(a => a.toVoice(custom));
+        const joined = args.join(' ');
+        if (this.fn in custom && !custom[this.fn])
+            return joined;
+        if (isOneOf(this.fn, '(', '[', '{'))
+            return `open bracket ${joined} close bracket`;
+        if (this.fn === 'sqrt')
+            return `square root of ${joined}`;
+        if (this.fn === '%')
+            return `${joined} percent`;
+        if (this.fn === '!')
+            return `${joined} factorial`;
+        if (this.fn === '/')
+            return `${args[0]} over ${args[1]}`;
+        if (this.fn === '//')
+            return `${args[0]} divided by ${args[1]}`;
+        if (this.fn === 'sup')
+            return `${args[0]} to the power of ${args[1]}`;
+        if (this.fn === 'sup')
+            return `${args[0]} to the power of ${args[1]}`;
+        if (this.fn === 'sub')
+            return joined;
+        if (VOICE_STRINGS[this.fn])
+            return args.join(` ${VOICE_STRINGS[this.fn]} `);
+        // TODO Implement other cases
+        if (isSpecialFunction(this.fn))
+            return `${this.fn} ${joined}`;
+        return `${this.fn} of ${joined}`;
+    }
 }
 // -----------------------------------------------------------------------------
 class ExprTerm extends ExprElement {
@@ -1015,6 +1073,9 @@ class ExprTerm extends ExprElement {
     toString() { return this.items.map(i => i.toString()).join(' '); }
     toMathML(custom = {}) {
         return this.items.map(i => i.toMathML(custom)).join('');
+    }
+    toVoice(custom = {}) {
+        return this.items.map(i => i.toVoice(custom)).join(' ');
     }
     collapse() { return collapseTerm(this.items).collapse(); }
 }

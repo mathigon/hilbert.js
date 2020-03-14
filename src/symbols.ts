@@ -131,3 +131,22 @@ const SPECIAL = new Set<string>(
 export function isSpecialFunction(fn: string) {
   return SPECIAL.has(fn);
 }
+
+export const VOICE_STRINGS: Obj<string> = {
+  '+': 'plus',
+  '−': 'minus',
+  '·': 'times',
+  '×': 'times',
+  '/': 'over',
+  '//': 'divided by',
+  '%': 'percent',
+  '!': 'factorial',
+  '±': 'plus-minus',
+  '=': 'equals',
+  '≠': 'does not equal',
+  '<': 'is less than',
+  '>': 'is greater than',
+  '≤': 'is less than or equal to',
+  '≥': 'is greater than or equal to',
+  'π': 'pi'
+};
