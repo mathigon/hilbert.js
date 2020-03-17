@@ -43,11 +43,12 @@ tape('strings', (test) => {
 });
 
 tape('super and subscripts', (test) => {
-  test.equal(str('x^2_n'), '(x^2)_n');
-  test.equal(str('x^(2_n)'), 'x^2_n');
-  test.equal(str('x_n^2'), 'x_(n^2)');
-  test.equal(str('x_1^2 + 2^3_(n^2)'), 'x_(1^2) + (2^3)_(n^2)');
+  test.equal(str('x^(2_n)'), 'x^(2_n)');
+  test.equal(str('(x^2)_n'), '(x^2)_n');
+  test.equal(str('x_1^2 + 2^3_(n^2)'), 'x_1^2 + 2_(n^2)^3');
   test.equal(str('x_(n+1) = x_n / 2'), 'x_(n + 1) = x_n / 2');
+  test.equal(str('x_n^2'), 'x_n^2');
+  test.equal(str('x^2_n'), 'x_n^2');
   test.end();
 });
 

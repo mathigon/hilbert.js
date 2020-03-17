@@ -5,7 +5,7 @@
 
 
 import {last, words} from '@mathigon/core';
-import {SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, BRACKETS} from './symbols';
+import {SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, BRACKETS, FUNCTION_NAMES} from './symbols';
 import {ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprElement} from './elements';
 import {ExprFunction, ExprTerm} from './functions';
 import {ExprError} from './errors';
@@ -117,7 +117,7 @@ function splitArray(items: ExprElement[], check: (x: ExprElement) => boolean) {
   return result;
 }
 
-function isOperator(expr: ExprElement, fns: string) {
+function isOperator(expr: ExprElement, fns: string): expr is ExprOperator {
   return expr instanceof ExprOperator && words(fns).includes(expr.o);
 }
 
@@ -126,7 +126,7 @@ function removeBrackets(expr: ExprElement) {
          expr;
 }
 
-function findBinaryFunction(tokens: ExprElement[], fn: string, toFn?: string) {
+function findBinaryFunction(tokens: ExprElement[], fn: string) {
   if (isOperator(tokens[0], fn)) throw ExprError.startOperator(tokens[0]);
   if (isOperator(last(tokens), fn)) throw ExprError.endOperator(last(tokens));
 
@@ -141,9 +141,22 @@ function findBinaryFunction(tokens: ExprElement[], fn: string, toFn?: string) {
     if (b instanceof ExprOperator) throw ExprError.consecutiveOperators(token.o,
         b.o);
 
-    const args = [removeBrackets(a), removeBrackets(b)];
-    tokens.splice(i - 1, 3, new ExprFunction(toFn || token.o, args));
-    i -= 2;
+    const token2 = tokens[i + 2];
+    if (fn === '^ _' && isOperator(token, '_ ^') && isOperator(token2, '_ ^') && token.o !== token2.o) {
+      // Special handling for subsup operator.
+      const c = tokens[i + 3];
+      if (c instanceof ExprOperator) throw ExprError.consecutiveOperators(token2.o, c.o);
+      const args = [removeBrackets(a), removeBrackets(b), removeBrackets(c)];
+      if (token.o === '^') [args[1], args[2]] = [args[2], args[1]];
+      tokens.splice(i - 1, 5, new ExprFunction('subsup', args));
+      i -= 4;
+
+    } else {
+      const fn = FUNCTION_NAMES[token.o] || token.o;
+      const args = [removeBrackets(a), removeBrackets(b)];
+      tokens.splice(i - 1, 3, new ExprFunction(fn, args));
+      i -= 2;
+    }
   }
 }
 
@@ -152,9 +165,7 @@ function findBinaryFunction(tokens: ExprElement[], fn: string, toFn?: string) {
 // Match Brackets
 
 function prepareTerm(tokens: ExprElement[]) {
-  // TODO Combine sup and sub calls into a single supsub function.
-  findBinaryFunction(tokens, '^', 'sup');
-  findBinaryFunction(tokens, '_', 'sub');
+  findBinaryFunction(tokens, '^ _');
   findBinaryFunction(tokens, '/');
   return makeTerm(tokens);
 }
@@ -257,7 +268,7 @@ export function collapseTerm(tokens: ExprElement[]) {
 
   // Match comparison and division operators.
   findBinaryFunction(tokens, '= < > ≤ ≥');
-  findBinaryFunction(tokens, '// ÷', '/');
+  findBinaryFunction(tokens, '// ÷');
 
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);

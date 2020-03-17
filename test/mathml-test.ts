@@ -36,6 +36,22 @@ tape('HTML Characters', (test) => {
   test.end();
 });
 
+tape('SupSub', (test) => {
+  test.equal(mathML('a^2+1'), '<msup><mi>a</mi><mn>2</mn></msup><mo value="+">+</mo><mn>1</mn>');
+  test.equal(mathML('a^(2+1)'), '<msup><mi>a</mi><mrow><mn>2</mn><mo value="+">+</mo><mn>1</mn></mrow></msup>');
+
+  test.equal(mathML('a_2+1'), '<msub><mi>a</mi><mn>2</mn></msub><mo value="+">+</mo><mn>1</mn>');
+  test.equal(mathML('a_(2+1)'), '<msub><mi>a</mi><mrow><mn>2</mn><mo value="+">+</mo><mn>1</mn></mrow></msub>');
+
+  test.equal(mathML('a^2_1'), '<msubsup><mi>a</mi><mn>1</mn><mn>2</mn></msubsup>');
+  test.equal(mathML('a_1^2'), '<msubsup><mi>a</mi><mn>1</mn><mn>2</mn></msubsup>');
+
+  test.equal(mathML('(a_1)^2'), '<msup><mrow><mfenced><msub><mi>a</mi><mn>1</mn></msub></mfenced></mrow><mn>2</mn></msup>');
+  test.equal(mathML('(a^2)_1'), '<msub><mrow><mfenced><msup><mi>a</mi><mn>2</mn></msup></mfenced></mrow><mn>1</mn></msub>');
+
+  test.end();
+});
+
 tape('Custom Functions', (test) => {
   const options = {
     a: (a: MathMLArgument) => `<a>${a}</a>`,
@@ -49,7 +65,6 @@ tape('Custom Functions', (test) => {
       '<c attr="text"><mtext>text</mtext></c>');
   test.end();
 });
-
 
 tape('Whitespace', (test) => {
   test.equal(mathML('a  b'), '<mi>a</mi><mspace/><mi>b</mi>');

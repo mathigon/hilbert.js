@@ -114,6 +114,13 @@ const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…°•∥⊥\'∠:%∼△';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 export const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
 
+export const FUNCTION_NAMES: Obj<string> = {
+  '_': 'sub',
+  '^': 'sup',
+  '//': '/',
+  '÷': '/'
+};
+
 const ESCAPES: Obj<string> = {
   '<': '&lt;',
   '>': '&gt;'

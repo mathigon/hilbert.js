@@ -11,7 +11,8 @@ import {ExprElement, ExprNumber, CustomFunction, MathMLMap, VarMap, ExprMap} fro
 import {ExprError} from './errors';
 
 
-const PRECEDENCE = words('+ − * × · / ÷ // sup sub');
+const PRECEDENCE = words('+ − * × · / ÷ // sup sub subsup');
+const SUBSUP = words('sub sup subsup');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 
 function needsBrackets(expr: ExprElement, parentFn: string): boolean {
@@ -19,6 +20,7 @@ function needsBrackets(expr: ExprElement, parentFn: string): boolean {
   if (expr instanceof ExprTerm) return true;
   if (!(expr instanceof ExprFunction)) return false;
   if (!PRECEDENCE.includes(expr.fn)) return false;
+  if (SUBSUP.includes(expr.fn) && SUBSUP.includes(parentFn)) return true;
   return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr.fn);
 }
 
@@ -106,6 +108,7 @@ export class ExprFunction extends ExprElement {
 
     if (this.fn === 'sup') return args.join('^');
     if (this.fn === 'sub') return args.join('_');
+    if (this.fn === 'subsup') return `${args[0]}_${args[1]}^${args[2]}`;
 
     if (words('+ * × · / = < > ≤ ≥ ≈').includes(this.fn))
       return args.join(' ' + this.fn + ' ');
@@ -168,6 +171,12 @@ export class ExprFunction extends ExprElement {
       return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
     }
 
+    if (this.fn === 'subsup') {
+      const args1 = [addMRow(this.args[0], argsF[0]),
+        addMRow(this.args[1], args[1]), addMRow(this.args[2], args[2])];
+      return `<msubsup>${args1.join('')}</msubsup>`;
+    }
+
     if (isOneOf(this.fn, '(', '[', '{'))
       return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(
           COMMA)}</mfenced>`;
@@ -206,8 +215,8 @@ export class ExprFunction extends ExprElement {
     if (this.fn === '/') return `${args[0]} over ${args[1]}`;
     if (this.fn === '//') return `${args[0]} divided by ${args[1]}`;
     if (this.fn === 'sup') return `${args[0]} to the power of ${args[1]}`;
-    if (this.fn === 'sup') return `${args[0]} to the power of ${args[1]}`;
     if (this.fn === 'sub') return joined;
+    if (this.fn === 'subsup') return `${args[0]}${args[1]} to the power of ${args[2]}`;
 
     if (VOICE_STRINGS[this.fn]) return args.join(` ${VOICE_STRINGS[this.fn]} `);
     // TODO Implement other cases

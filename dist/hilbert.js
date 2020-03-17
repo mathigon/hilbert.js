@@ -748,6 +748,12 @@ const IDENTIFIER_SYMBOLS = [...LOWERCASE, ...UPPERCASE, ...GREEK, '$'];
 const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…°•∥⊥\'∠:%∼△';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
+const FUNCTION_NAMES = {
+    '_': 'sub',
+    '^': 'sup',
+    '//': '/',
+    '÷': '/'
+};
 const ESCAPES = {
     '<': '&lt;',
     '>': '&gt;'
@@ -873,7 +879,8 @@ class ExprOperator extends ExprElement {
 }
 
 // =============================================================================
-const PRECEDENCE = words('+ − * × · / ÷ // sup sub');
+const PRECEDENCE = words('+ − * × · / ÷ // sup sub subsup');
+const SUBSUP = words('sub sup subsup');
 const COMMA = '<mo value="," lspace="0">,</mo>';
 function needsBrackets(expr, parentFn) {
     if (!PRECEDENCE.includes(parentFn))
@@ -884,6 +891,8 @@ function needsBrackets(expr, parentFn) {
         return false;
     if (!PRECEDENCE.includes(expr.fn))
         return false;
+    if (SUBSUP.includes(expr.fn) && SUBSUP.includes(parentFn))
+        return true;
     return PRECEDENCE.indexOf(parentFn) > PRECEDENCE.indexOf(expr.fn);
 }
 function addMFence(expr, fn, string) {
@@ -961,6 +970,8 @@ class ExprFunction extends ExprElement {
             return args.join('^');
         if (this.fn === 'sub')
             return args.join('_');
+        if (this.fn === 'subsup')
+            return `${args[0]}_${args[1]}^${args[2]}`;
         if (words('+ * × · / = < > ≤ ≥ ≈').includes(this.fn))
             return args.join(' ' + this.fn + ' ');
         if (isOneOf(this.fn, '(', '[', '{'))
@@ -1014,6 +1025,11 @@ class ExprFunction extends ExprElement {
                 addMRow(this.args[1], args[1])];
             return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
         }
+        if (this.fn === 'subsup') {
+            const args1 = [addMRow(this.args[0], argsF[0]),
+                addMRow(this.args[1], args[1]), addMRow(this.args[2], args[2])];
+            return `<msubsup>${args1.join('')}</msubsup>`;
+        }
         if (isOneOf(this.fn, '(', '[', '{'))
             return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(COMMA)}</mfenced>`;
         if (isOneOf(this.fn, '!', '%'))
@@ -1047,10 +1063,10 @@ class ExprFunction extends ExprElement {
             return `${args[0]} divided by ${args[1]}`;
         if (this.fn === 'sup')
             return `${args[0]} to the power of ${args[1]}`;
+        if (this.fn === 'subsup')
+            return `${args[0]}${args[1]} to the power of ${args[2]}`;
         if (this.fn === 'sup')
             return `${args[0]} to the power of ${args[1]}`;
-        if (this.fn === 'sub')
-            return joined;
         if (VOICE_STRINGS[this.fn])
             return args.join(` ${VOICE_STRINGS[this.fn]} `);
         // TODO Implement other cases
@@ -1197,7 +1213,7 @@ function removeBrackets(expr) {
     return (expr instanceof ExprFunction && expr.fn === '(') ? expr.args[0] :
         expr;
 }
-function findBinaryFunction(tokens, fn, toFn) {
+function findBinaryFunction(tokens, fn) {
     if (isOperator(tokens[0], fn))
         throw ExprError.startOperator(tokens[0]);
     if (isOperator(last(tokens), fn))
@@ -1212,17 +1228,30 @@ function findBinaryFunction(tokens, fn, toFn) {
             throw ExprError.consecutiveOperators(a.o, token.o);
         if (b instanceof ExprOperator)
             throw ExprError.consecutiveOperators(token.o, b.o);
-        const args = [removeBrackets(a), removeBrackets(b)];
-        tokens.splice(i - 1, 3, new ExprFunction(toFn || token.o, args));
-        i -= 2;
+        const token2 = tokens[i + 2];
+        if (fn === '^ _' && isOperator(token, '_ ^') && isOperator(token2, '_ ^') && token.o !== token2.o) {
+            // Special handling for subsup operator.
+            const c = tokens[i + 3];
+            if (c instanceof ExprOperator)
+                throw ExprError.consecutiveOperators(token2.o, c.o);
+            const args = [removeBrackets(a), removeBrackets(b), removeBrackets(c)];
+            if (token.o === '^')
+                [args[1], args[2]] = [args[2], args[1]];
+            tokens.splice(i - 1, 5, new ExprFunction('subsup', args));
+            i -= 4;
+        }
+        else {
+            const fn = FUNCTION_NAMES[token.o] || token.o;
+            const args = [removeBrackets(a), removeBrackets(b)];
+            tokens.splice(i - 1, 3, new ExprFunction(fn, args));
+            i -= 2;
+        }
     }
 }
 // -----------------------------------------------------------------------------
 // Match Brackets
 function prepareTerm(tokens) {
-    // TODO Combine sup and sub calls into a single supsub function.
-    findBinaryFunction(tokens, '^', 'sup');
-    findBinaryFunction(tokens, '_', 'sub');
+    findBinaryFunction(tokens, '^ _');
     findBinaryFunction(tokens, '/');
     return makeTerm(tokens);
 }
@@ -1314,7 +1343,7 @@ function collapseTerm(tokens) {
     }
     // Match comparison and division operators.
     findBinaryFunction(tokens, '= < > ≤ ≥');
-    findBinaryFunction(tokens, '// ÷', '/');
+    findBinaryFunction(tokens, '// ÷');
     // Match multiplication operators.
     tokens = findAssociativeFunction(tokens, '× * ·', true);
     // Match - and ± operators.
