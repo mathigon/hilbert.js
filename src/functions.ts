@@ -216,7 +216,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn === '//') return `${args[0]} divided by ${args[1]}`;
     if (this.fn === 'sup') return `${args[0]} to the power of ${args[1]}`;
     if (this.fn === 'sub') return joined;
-    if (this.fn === 'subsup') return `${args[0]}${args[1]} to the power of ${args[2]}`;
+    if (this.fn === 'subsup') return `${args[0]} ${args[1]} to the power of ${args[2]}`;
 
     if (VOICE_STRINGS[this.fn]) return args.join(` ${VOICE_STRINGS[this.fn]} `);
     // TODO Implement other cases

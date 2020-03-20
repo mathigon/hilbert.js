@@ -18,10 +18,12 @@ enum TokenType {UNKNOWN, SPACE, STR, NUM, VAR, OP}
 
 
 function createToken(buffer: string, type: TokenType) {
+  if (type === TokenType.STR) return new ExprString(buffer);
+
+  // Strings can be empty, but other types cannot.
   if (!buffer || !type) return undefined;
 
   if (type === TokenType.SPACE && buffer.length > 1) return new ExprSpace();
-  if (type === TokenType.STR) return new ExprString(buffer);
 
   if (type === TokenType.NUM) {
     // This can happen if users simply type ".", which get parsed as number.
