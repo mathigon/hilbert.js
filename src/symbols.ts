@@ -60,12 +60,6 @@ export const SPECIAL_OPERATORS: Obj<string> = {
   uarr: '↑',
   darr: '↓',
   lArr: '⇐',
-
-  CC: 'ℂ',
-  NN: 'ℕ',
-  QQ: 'ℚ',
-  RR: 'ℝ',
-  ZZ: 'ℤ'
 };
 
 export const SPECIAL_IDENTIFIERS: Obj<string> = {
@@ -79,6 +73,7 @@ export const SPECIAL_IDENTIFIERS: Obj<string> = {
   Phi: 'Φ',
   Psi: 'Ψ',
   Omega: 'Ω',
+
   alpha: 'α',
   beta: 'β',
   gamma: 'γ',
@@ -101,7 +96,13 @@ export const SPECIAL_IDENTIFIERS: Obj<string> = {
   phi: 'φ',
   chi: 'χ',
   psi: 'ψ',
-  omega: 'ω'
+  omega: 'ω',
+
+  CC: 'ℂ',
+  NN: 'ℕ',
+  QQ: 'ℚ',
+  RR: 'ℝ',
+  ZZ: 'ℤ'
 };
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
