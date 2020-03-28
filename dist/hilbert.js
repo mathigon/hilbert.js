@@ -699,11 +699,6 @@ const SPECIAL_OPERATORS = {
     uarr: '↑',
     darr: '↓',
     lArr: '⇐',
-    CC: 'ℂ',
-    NN: 'ℕ',
-    QQ: 'ℚ',
-    RR: 'ℝ',
-    ZZ: 'ℤ'
 };
 const SPECIAL_IDENTIFIERS = {
     Gamma: 'Γ',
@@ -738,7 +733,12 @@ const SPECIAL_IDENTIFIERS = {
     phi: 'φ',
     chi: 'χ',
     psi: 'ψ',
-    omega: 'ω'
+    omega: 'ω',
+    CC: 'ℂ',
+    NN: 'ℕ',
+    QQ: 'ℚ',
+    RR: 'ℝ',
+    ZZ: 'ℤ'
 };
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
 const LOWERCASE = ALPHABET.split('');
@@ -1063,10 +1063,10 @@ class ExprFunction extends ExprElement {
             return `${args[0]} divided by ${args[1]}`;
         if (this.fn === 'sup')
             return `${args[0]} to the power of ${args[1]}`;
+        if (this.fn === 'sub')
+            return joined;
         if (this.fn === 'subsup')
-            return `${args[0]}${args[1]} to the power of ${args[2]}`;
-        if (this.fn === 'sup')
-            return `${args[0]} to the power of ${args[1]}`;
+            return `${args[0]} ${args[1]} to the power of ${args[2]}`;
         if (VOICE_STRINGS[this.fn])
             return args.join(` ${VOICE_STRINGS[this.fn]} `);
         // TODO Implement other cases
@@ -1109,12 +1109,13 @@ var TokenType;
     TokenType[TokenType["OP"] = 5] = "OP";
 })(TokenType || (TokenType = {}));
 function createToken(buffer, type) {
+    if (type === TokenType.STR)
+        return new ExprString(buffer);
+    // Strings can be empty, but other types cannot.
     if (!buffer || !type)
         return undefined;
     if (type === TokenType.SPACE && buffer.length > 1)
         return new ExprSpace();
-    if (type === TokenType.STR)
-        return new ExprString(buffer);
     if (type === TokenType.NUM) {
         // This can happen if users simply type ".", which get parsed as number.
         if (isNaN(+buffer))
