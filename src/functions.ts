@@ -201,11 +201,17 @@ export class ExprFunction extends ExprElement {
         COMMA)}</mfenced>`;
   }
 
-  toVoice(custom: Obj<string> = {}) {
+  toVoice(custom: MathMLMap = {}) {
     const args = this.args.map(a => a.toVoice(custom));
     const joined = args.join(' ');
 
-    if (this.fn in custom) return custom[this.fn] || joined;
+    if (this.fn in custom) {
+      const argsX = args.map((a, i) => ({
+        toString: () => a,
+        val: this.args[i]
+      }));
+      return custom[this.fn](...argsX);
+    }
 
     if (isOneOf(this.fn, '(', '[', '{')) return joined;
     // Maybe `open bracket ${joined} close bracket` ?
@@ -215,9 +221,14 @@ export class ExprFunction extends ExprElement {
     if (this.fn === '!') return `${joined} factorial`;
     if (this.fn === '/') return `${args[0]} over ${args[1]}`;
     if (this.fn === '//') return `${args[0]} divided by ${args[1]}`;
-    if (this.fn === 'sup') return `${args[0]} to the power of ${args[1]}`;
     if (this.fn === 'sub') return joined;
     if (this.fn === 'subsup') return `${args[0]} ${args[1]} to the power of ${args[2]}`;
+
+    if (this.fn === 'sup') {
+      if (args[1] === '2') return `${args[0]} squared`;
+      if (args[1] === '3') return `${args[0]} cubed`;
+      return `${args[0]} to the power of ${args[1]}`;
+    }
 
     if (VOICE_STRINGS[this.fn]) return args.join(` ${VOICE_STRINGS[this.fn]} `);
     // TODO Implement other cases
@@ -251,7 +262,7 @@ export class ExprTerm extends ExprElement {
     return this.items.map(i => i.toMathML(custom)).join('');
   }
 
-  toVoice(custom: Obj<string> = {}) {
+  toVoice(custom: MathMLMap = {}) {
     return this.items.map(i => i.toVoice(custom)).join(' ');
   }
 

@@ -47,7 +47,7 @@ export abstract class ExprElement {
   toString() { return ''; }
 
   /** Converts the expression to a MathML string. */
-  toVoice(custom: Obj<string> = {}) { return ''; }
+  toVoice(custom: MathMLMap = {}) { return ''; }
 
   /** Converts the expression to a MathML string. */
   toMathML(custom: MathMLMap = {}) { return ''; }
@@ -93,8 +93,11 @@ export class ExprIdentifier extends ExprElement {
 
   toString() { return this.i; }
 
-  toVoice(custom: Obj<string> = {}) {
-    return (this.i in custom) ? custom[this.i] : VOICE_STRINGS[this.i] || this.i;
+  toVoice() {
+    // Surrounding single-letter variables with _s can help with TTS algorithms.
+    if (this.i in VOICE_STRINGS) return VOICE_STRINGS[this.i];
+    if (this.i.length === 1) return `_${this.i}_`
+    return this.i;
   }
 }
 
@@ -131,9 +134,7 @@ export class ExprOperator extends ExprElement {
 
   toString() { return this.o.replace('//', '/'); }
 
-  toVoice(custom: Obj<string> = {}) {
-    return (this.o in custom) ? custom[this.o] : VOICE_STRINGS[this.o] || this.o;
-  }
+  toVoice() { return VOICE_STRINGS[this.o] || this.o; }
 
   get functions() { return [this.o]; }
 
