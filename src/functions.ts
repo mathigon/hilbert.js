@@ -205,9 +205,10 @@ export class ExprFunction extends ExprElement {
     const args = this.args.map(a => a.toVoice(custom));
     const joined = args.join(' ');
 
-    if (this.fn in custom && !custom[this.fn]) return joined;
+    if (this.fn in custom) return custom[this.fn] || joined;
 
-    if (isOneOf(this.fn, '(', '[', '{')) return `open bracket ${joined} close bracket`;
+    if (isOneOf(this.fn, '(', '[', '{')) return joined;
+    // Maybe `open bracket ${joined} close bracket` ?
 
     if (this.fn === 'sqrt') return `square root of ${joined}`;
     if (this.fn === '%') return `${joined} percent`;
