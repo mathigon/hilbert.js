@@ -161,3 +161,7 @@ export const VOICE_STRINGS: Obj<string> = {
   '∥': 'is parallel to',
   '⊥': 'is perpendicular to'
 };
+
+for (const name of Object.keys(SPECIAL_IDENTIFIERS)) {
+  VOICE_STRINGS[SPECIAL_IDENTIFIERS[name]] = name;
+}
