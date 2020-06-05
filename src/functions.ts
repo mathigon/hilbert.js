@@ -33,6 +33,10 @@ function addMRow(expr: ExprElement, string: string) {
   return needsRow ? `<mrow>${string}</mrow>` : string;
 }
 
+function supVoice(a: string) {
+  return a === '2' ? 'squared' : a === '3' ? 'cubed' : `to the power of ${a}`;
+}
+
 
 export class ExprFunction extends ExprElement {
 
@@ -221,14 +225,10 @@ export class ExprFunction extends ExprElement {
     if (this.fn === '!') return `${joined} factorial`;
     if (this.fn === '/') return `${args[0]} over ${args[1]}`;
     if (this.fn === '//') return `${args[0]} divided by ${args[1]}`;
-    if (this.fn === 'sub') return joined;
-    if (this.fn === 'subsup') return `${args[0]} ${args[1]} to the power of ${args[2]}`;
 
-    if (this.fn === 'sup') {
-      if (args[1] === '2') return `${args[0]} squared`;
-      if (args[1] === '3') return `${args[0]} cubed`;
-      return `${args[0]} to the power of ${args[1]}`;
-    }
+    if (this.fn === 'sub') return joined;
+    if (this.fn === 'subsup') return `${args[0]} ${args[1]} ${supVoice(args[2])}`;
+    if (this.fn === 'sup') return `${args[0]} ${supVoice(args[1])}`;
 
     if (VOICE_STRINGS[this.fn]) return args.join(` ${VOICE_STRINGS[this.fn]} `);
     // TODO Implement other cases
