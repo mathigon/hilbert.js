@@ -29,6 +29,7 @@ function numEquals(expr1: ExprElement, expr2: ExprElement) {
 
     // We only test positive random numbers, because negative numbers raised
     // to non-integer powers return NaN.
+    let matches  = 0;
     for (let i = 0; i < 5; ++i) {
       const substitution: Obj<number> = {};
       for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
@@ -36,8 +37,11 @@ function numEquals(expr1: ExprElement, expr2: ExprElement) {
       const b = fn2.evaluate(substitution);
       if (isNaN(a) || isNaN(b)) continue;  // This might happen in square roots.
       if (!nearlyEquals(a, b)) return false;
+      matches += 1;
     }
-    return true;
+
+    // Return false if all items were NaN.
+    return !!matches;
   } catch (e) {
     return false;
   }
