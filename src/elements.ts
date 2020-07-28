@@ -123,7 +123,7 @@ export class ExprSpace extends ExprElement {
 
   toString() { return ' '; }
 
-  toMathML() { return `<mspace/>`; }
+  toMathML() { return `<mspace></mspace>`; }
 }
 
 export class ExprOperator extends ExprElement {
