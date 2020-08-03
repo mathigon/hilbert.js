@@ -11,6 +11,7 @@ award-winning mathematics education project.
 ## Open Issues
 
 * [ ] Support for functions with subscripts (e.g. `log_a(b)`).
+* [ ] Support for conditional probability brackets (e.g. `P(A|B)`)
 * [ ] Support for large operators (sum, product and integral).
 * [ ] Parse ^ and _ operator from right to left (e.g. `2^2^2 == 2^(2^2)`).
 * [ ] Add `evaluate()`, `toString()` and `toMathML()` methods for many more
