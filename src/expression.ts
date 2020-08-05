@@ -29,10 +29,10 @@ function numEquals(expr1: ExprElement, expr2: ExprElement) {
 
     // We only test positive random numbers, because negative numbers raised
     // to non-integer powers return NaN.
-    let matches  = 0;
+    let matches = 0;
     for (let i = 0; i < 5; ++i) {
       const substitution: Obj<number> = {};
-      for (let v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
+      for (const v of vars) substitution[v] = CONSTANTS[v] || Math.random() * 5;
       const a = fn1.evaluate(substitution);
       const b = fn2.evaluate(substitution);
       if (isNaN(a) || isNaN(b)) continue;  // This might happen in square roots.
@@ -49,5 +49,5 @@ function numEquals(expr1: ExprElement, expr2: ExprElement) {
 
 export const Expression = {
   numEquals,
-  parse: cache(parse)
+  parse: cache(parse),
 };

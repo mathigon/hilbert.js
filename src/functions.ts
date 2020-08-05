@@ -4,7 +4,7 @@
 // =============================================================================
 
 
-import {unique, flatten, words, isOneOf, join, Obj} from '@mathigon/core';
+import {unique, flatten, words, isOneOf, join} from '@mathigon/core';
 import {collapseTerm} from './parser';
 import {BRACKETS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
 import {ExprElement, ExprNumber, CustomFunction, MathMLMap, VarMap, ExprMap} from './elements';
@@ -104,21 +104,23 @@ export class ExprFunction extends ExprElement {
   }
 
   toString() {
-    const args = this.args.map(a => needsBrackets(a, this.fn) ?
-                                    '(' + a.toString() + ')' : a.toString());
+    const args = this.args.map(a => needsBrackets(a, this.fn) ? '(' + a.toString() + ')' : a.toString());
 
-    if (this.fn === '−')
+    if (this.fn === '−') {
       return args.length > 1 ? args.join(' − ') : '−' + args[0];
+    }
 
     if (this.fn === 'sup') return args.join('^');
     if (this.fn === 'sub') return args.join('_');
     if (this.fn === 'subsup') return `${args[0]}_${args[1]}^${args[2]}`;
 
-    if (words('+ * × · / = < > ≤ ≥ ≈').includes(this.fn))
+    if (words('+ * × · / = < > ≤ ≥ ≈').includes(this.fn)) {
       return args.join(' ' + this.fn + ' ');
+    }
 
-    if (isOneOf(this.fn, '(', '[', '{'))
+    if (isOneOf(this.fn, '(', '[', '{')) {
       return this.fn + this.args.join(', ') + BRACKETS[this.fn];
+    }
 
     if (isOneOf(this.fn, '!', '%')) return args[0] + this.fn;
 
@@ -133,14 +135,14 @@ export class ExprFunction extends ExprElement {
     if (this.fn in custom) {
       const argsX = args.map((a, i) => ({
         toString: () => a,
-        val: this.args[i]
+        val: this.args[i],
       }));
       return custom[this.fn](...argsX);
     }
 
-    if (this.fn === '−') return argsF.length > 1 ?
-                                argsF.join('<mo value="−">−</mo>') :
-                                '<mo rspace="0" value="−">−</mo>' + argsF[0];
+    if (this.fn === '−') {
+      return argsF.length > 1 ? argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
+    }
 
     if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥', '≈')) {
       const fn = escape(this.fn);
@@ -181,23 +183,25 @@ export class ExprFunction extends ExprElement {
       return `<msubsup>${args1.join('')}</msubsup>`;
     }
 
-    if (isOneOf(this.fn, '(', '[', '{'))
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(
-          COMMA)}</mfenced>`;
+    if (isOneOf(this.fn, '(', '[', '{')) {
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(COMMA)}</mfenced>`;
+    }
 
-    if (isOneOf(this.fn, '!', '%'))
+    if (isOneOf(this.fn, '!', '%')) {
       return argsF[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
+    }
 
-    if (this.fn === 'abs')
+    if (this.fn === 'abs') {
       return `<mfenced open="|" close="|">${argsF.join(COMMA)}</mfenced>`;
+    }
 
-    if (this.fn === 'bar')
-      return `<mover>${addMRow(this.args[0],
-          argsF[0])}<mo value="‾">‾</mo></mover>`;
+    if (this.fn === 'bar') {
+      return `<mover>${addMRow(this.args[0], argsF[0])}<mo value="‾">‾</mo></mover>`;
+    }
 
-    if (this.fn === 'vec')
-      return `<mover>${addMRow(this.args[0],
-          argsF[0])}<mo value="→">→</mo></mover>`;
+    if (this.fn === 'vec') {
+      return `<mover>${addMRow(this.args[0], argsF[0])}<mo value="→">→</mo></mover>`;
+    }
 
     // TODO Implement other functions
     const variant = isSpecialFunction(this.fn) ? ' mathvariant="normal"' : '';
@@ -212,7 +216,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn in custom) {
       const argsX = args.map((a, i) => ({
         toString: () => a,
-        val: this.args[i]
+        val: this.args[i],
       }));
       return custom[this.fn](...argsX);
     }
@@ -246,17 +250,29 @@ export class ExprTerm extends ExprElement {
     super();
   }
 
-  evaluate(vars: VarMap = {}) { return this.collapse().evaluate(vars); }
+  evaluate(vars: VarMap = {}) {
+    return this.collapse().evaluate(vars);
+  }
 
-  substitute(vars: ExprMap = {}) { return this.collapse().substitute(vars); }
+  substitute(vars: ExprMap = {}) {
+    return this.collapse().substitute(vars);
+  }
 
-  get simplified() { return this.collapse().simplified; }
+  get simplified() {
+    return this.collapse().simplified;
+  }
 
-  get variables() { return unique(join(...this.items.map(i => i.variables))); }
+  get variables() {
+    return unique(join(...this.items.map(i => i.variables)));
+  }
 
-  get functions() { return this.collapse().functions; }
+  get functions() {
+    return this.collapse().functions;
+  }
 
-  toString() { return this.items.map(i => i.toString()).join(' '); }
+  toString() {
+    return this.items.map(i => i.toString()).join(' ');
+  }
 
   toMathML(custom: MathMLMap = {}) {
     return this.items.map(i => i.toMathML(custom)).join('');
@@ -266,5 +282,7 @@ export class ExprTerm extends ExprElement {
     return this.items.map(i => i.toVoice(custom)).join(' ');
   }
 
-  collapse() { return collapseTerm(this.items).collapse(); }
+  collapse() {
+    return collapseTerm(this.items).collapse();
+  }
 }

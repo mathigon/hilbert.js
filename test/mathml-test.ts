@@ -56,7 +56,7 @@ tape('Custom Functions', (test) => {
   const options = {
     a: (a: MathMLArgument) => `<a>${a}</a>`,
     b: (...b: MathMLArgument[]) => `<b>${b.join(',')}</b>`,
-    c: (c: MathMLArgument) => `<c attr="${(c.val as ExprString).s}">${c}</c>`
+    c: (c: MathMLArgument) => `<c attr="${(c.val as ExprString).s}">${c}</c>`,
   };
 
   test.equal(mathML('a(1)', options), '<a><mn>1</mn></a>');
@@ -67,12 +67,12 @@ tape('Custom Functions', (test) => {
 });
 
 tape('Whitespace', (test) => {
-  test.equal(mathML('a  b'), '<mi>a</mi><mspace/><mi>b</mi>');
+  test.equal(mathML('a  b'), '<mi>a</mi><mspace></mspace><mi>b</mi>');
   test.equal(mathML('a b'), '<mi>a</mi><mi>b</mi>');
   test.end();
 });
 
-tape('Functions', function (test) {
+tape('Functions', function(test) {
   test.equal(mathML('sin(a + b)'),
       '<mi mathvariant="normal">sin</mi><mfenced><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('tan = sin/cos'),
@@ -121,7 +121,7 @@ tape('Roots', (test) => {
       '<mi>φ</mi><mo value="=">=</mo><mfrac><mrow><mn>1</mn><mo value="+">+</mo><msqrt><mn>5</mn></msqrt></mrow><mn>2</mn></mfrac>');
   test.equal(mathML(
       'sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + sqrt(1 + …)))))))'),
-      '<msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><mo value="…">…</mo></msqrt></msqrt></msqrt></msqrt></msqrt></msqrt></msqrt>');
+  '<msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><msqrt><mn>1</mn><mo value="+">+</mo><mo value="…">…</mo></msqrt></msqrt></msqrt></msqrt></msqrt></msqrt></msqrt>');
   test.end();
 });
 

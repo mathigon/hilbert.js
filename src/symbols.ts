@@ -10,14 +10,14 @@ import {Obj} from '@mathigon/core';
 export const CONSTANTS: Obj<number> = {
   pi: Math.PI,
   π: Math.PI,
-  e: Math.E
+  e: Math.E,
 };
 
 export const BRACKETS: Obj<string> = {
   '(': ')',
   '[': ']',
   '{': '}',
-  '|': '|'
+  '|': '|',
 };
 
 export const SPECIAL_OPERATORS: Obj<string> = {
@@ -27,39 +27,39 @@ export const SPECIAL_OPERATORS: Obj<string> = {
   '+-': '±',
   '–': '−',
   '-': '−',
-  xx: '×',
-  sum: '∑',
-  prod: '∏',
-  int: '∫',
-  del: '∂',
-  grad: '∇',
-  aleph: 'ℵ',
-  not: '¬',
-  AA: '∀',
-  EE: '∃',
+  'xx': '×',
+  'sum': '∑',
+  'prod': '∏',
+  'int': '∫',
+  'del': '∂',
+  'grad': '∇',
+  'aleph': 'ℵ',
+  'not': '¬',
+  'AA': '∀',
+  'EE': '∃',
   '\'': '’',
 
   '!=': '≠',
   '<=': '≤',
   '>=': '≥',
-  in: '∈',
+  'in': '∈',
   '!in': '∉',
   '==': '≡',
   '~=': '≅',
   '~~': '≈',
-  sub: '⊂',
-  sube: '⊆',
-  prop: '∝',
-  oo: '∞',
+  'sub': '⊂',
+  'sube': '⊆',
+  'prop': '∝',
+  'oo': '∞',
 
   '<-': '←',
   '->': '→',
   '=>': '⇒',
   '<=>': '⇔',
   '|->': '↦',
-  uarr: '↑',
-  darr: '↓',
-  lArr: '⇐',
+  'uarr': '↑',
+  'darr': '↓',
+  'lArr': '⇐',
 };
 
 export const SPECIAL_IDENTIFIERS: Obj<string> = {
@@ -102,7 +102,7 @@ export const SPECIAL_IDENTIFIERS: Obj<string> = {
   NN: 'ℕ',
   QQ: 'ℚ',
   RR: 'ℝ',
-  ZZ: 'ℤ'
+  ZZ: 'ℤ',
 };
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
@@ -119,12 +119,12 @@ export const FUNCTION_NAMES: Obj<string> = {
   '_': 'sub',
   '^': 'sup',
   '//': '/',
-  '÷': '/'
+  '÷': '/',
 };
 
 const ESCAPES: Obj<string> = {
   '<': '&lt;',
-  '>': '&gt;'
+  '>': '&gt;',
 };
 
 export function escape(char: string) {
@@ -159,7 +159,7 @@ export const VOICE_STRINGS: Obj<string> = {
   'π': 'pi',
   '≅': 'is congruent to',
   '∥': 'is parallel to',
-  '⊥': 'is perpendicular to'
+  '⊥': 'is perpendicular to',
 };
 
 for (const name of Object.keys(SPECIAL_IDENTIFIERS)) {

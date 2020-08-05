@@ -55,7 +55,7 @@ export function tokenize(str: string) {
   let buffer = '';
   let type = TokenType.UNKNOWN;
 
-  for (let s of str) {
+  for (const s of str) {
 
     // Handle Strings
     if (s === '"') {
@@ -109,7 +109,7 @@ function makeTerm(items: ExprElement[]) {
 
 function splitArray(items: ExprElement[], check: (x: ExprElement) => boolean) {
   const result: ExprElement[][] = [[]];
-  for (let i of items) {
+  for (const i of items) {
     if (check(i)) {
       result.push([]);
     } else {
@@ -138,10 +138,13 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
 
     const a = tokens[i - 1];
     const b = tokens[i + 1];
-    if (a instanceof ExprOperator) throw ExprError.consecutiveOperators(a.o,
-        token.o);
-    if (b instanceof ExprOperator) throw ExprError.consecutiveOperators(token.o,
-        b.o);
+
+    if (a instanceof ExprOperator) {
+      throw ExprError.consecutiveOperators(a.o, token.o);
+    }
+    if (b instanceof ExprOperator) {
+      throw ExprError.consecutiveOperators(token.o, b.o);
+    }
 
     const token2 = tokens[i + 2];
     if (fn === '^ _' && isOperator(token, '_ ^') && isOperator(token2, '_ ^') && token.o !== token2.o) {
@@ -175,14 +178,14 @@ function prepareTerm(tokens: ExprElement[]) {
 export function matchBrackets(tokens: ExprElement[]) {
   const stack: ExprElement[][] = [[]];
 
-  for (let t of tokens) {
-    const lastOpen = last(stack).length ? (last(stack)[0] as ExprOperator).o :
-                     undefined;
+  for (const t of tokens) {
+    const lastOpen = last(stack).length ? (last(stack)[0] as ExprOperator).o : undefined;
 
     if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
 
-      if (!isOperator(t, BRACKETS[lastOpen!]))
+      if (!isOperator(t, BRACKETS[lastOpen!])) {
         throw ExprError.conflictingBrackets((t as ExprOperator).o);
+      }
 
       const closed = stack.pop();
       const term = last(stack);
@@ -208,8 +211,9 @@ export function matchBrackets(tokens: ExprElement[]) {
     }
   }
 
-  if (stack.length > 1) throw ExprError.unclosedBracket(
-      (last(stack)[0] as ExprOperator).o);
+  if (stack.length > 1) {
+    throw ExprError.unclosedBracket((last(stack)[0] as ExprOperator).o);
+  }
   return prepareTerm(stack[0]);
 }
 
@@ -218,7 +222,7 @@ export function matchBrackets(tokens: ExprElement[]) {
 // Collapse term items
 
 function findAssociativeFunction(tokens: ExprElement[], symbol: string,
-                                 implicit = false) {
+    implicit = false) {
   const result: ExprElement[] = [];
   let buffer: ExprElement[] = [];
   let lastWasSymbol = false;
@@ -231,7 +235,7 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string,
     buffer = [];
   }
 
-  for (let t of tokens) {
+  for (const t of tokens) {
     if (isOperator(t, symbol)) {
       if (lastWasSymbol || !buffer.length) throw ExprError.invalidExpression();
       lastWasSymbol = true;

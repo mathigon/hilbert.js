@@ -26,31 +26,49 @@ export type MathMLMap = Obj<(...args: MathMLArgument[]) => string>;
 export abstract class ExprElement {
 
   /** Evaluates an expression using a given map of variables and functions. */
-  evaluate(vars: VarMap = {}): number { return NaN; }
+  evaluate(_vars: VarMap = {}): number {
+    return NaN;
+  }
 
   /** Substitutes a new expression for a variable. */
-  substitute(vars: ExprMap = {}): ExprElement { return this; }
+  substitute(_vars: ExprMap = {}): ExprElement {
+    return this;
+  }
 
   /** Returns the simplest mathematically equivalent expression. */
-  get simplified(): ExprElement { return this; }
+  get simplified(): ExprElement {
+    return this;
+  }
 
   /** Returns a list of all variables used in the expression. */
-  get variables(): string[] { return []; }
+  get variables(): string[] {
+    return [];
+  }
 
   /** Returns a list of all functions called by the expression. */
-  get functions(): string[] { return []; }
+  get functions(): string[] {
+    return [];
+  }
 
   /** Collapses all terms into functions. */
-  collapse(): ExprElement { return this; }
+  collapse(): ExprElement {
+    return this;
+  }
 
   /** Converts the expression to a plain text string. */
-  toString() { return ''; }
+  toString() {
+    return '';
+  }
 
   /** Converts the expression to a MathML string. */
-  toVoice(custom: MathMLMap = {}) { return ''; }
+  toVoice(_custom: MathMLMap = {}) {
+    return '';
+  }
 
   /** Converts the expression to a MathML string. */
-  toMathML(custom: MathMLMap = {}) { return ''; }
+  toMathML(_custom: MathMLMap = {}) {
+    return '';
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -61,13 +79,21 @@ export class ExprNumber extends ExprElement {
     super();
   }
 
-  evaluate() { return this.n; }
+  evaluate() {
+    return this.n;
+  }
 
-  toString() { return '' + this.n; }
+  toString() {
+    return '' + this.n;
+  }
 
-  toVoice() { return '' + this.n; }
+  toVoice() {
+    return '' + this.n;
+  }
 
-  toMathML() { return `<mn>${this.n}</mn>`; }
+  toMathML() {
+    return `<mn>${this.n}</mn>`;
+  }
 }
 
 export class ExprIdentifier extends ExprElement {
@@ -87,16 +113,22 @@ export class ExprIdentifier extends ExprElement {
     return `<mi${variant}>${this.i}</mi>`;
   }
 
-  substitute(vars: ExprMap = {}) { return vars[this.i] || this; }
+  substitute(vars: ExprMap = {}) {
+    return vars[this.i] || this;
+  }
 
-  get variables() { return [this.i]; }
+  get variables() {
+    return [this.i];
+  }
 
-  toString() { return this.i; }
+  toString() {
+    return this.i;
+  }
 
   toVoice() {
     // Surrounding single-letter variables with _s can help with TTS algorithms.
     if (this.i in VOICE_STRINGS) return VOICE_STRINGS[this.i];
-    if (this.i.length === 1) return `_${this.i}_`
+    if (this.i.length === 1) return `_${this.i}_`;
     return this.i;
   }
 }
@@ -112,18 +144,28 @@ export class ExprString extends ExprElement {
     throw ExprError.undefinedVariable(this.s);
   }
 
-  toString() { return '"' + this.s + '"'; }
+  toString() {
+    return '"' + this.s + '"';
+  }
 
-  toVoice() { return this.s; }
+  toVoice() {
+    return this.s;
+  }
 
-  toMathML() { return `<mtext>${this.s}</mtext>`; }
+  toMathML() {
+    return `<mtext>${this.s}</mtext>`;
+  }
 }
 
 export class ExprSpace extends ExprElement {
 
-  toString() { return ' '; }
+  toString() {
+    return ' ';
+  }
 
-  toMathML() { return `<mspace></mspace>`; }
+  toMathML() {
+    return `<mspace></mspace>`;
+  }
 }
 
 export class ExprOperator extends ExprElement {
@@ -132,11 +174,17 @@ export class ExprOperator extends ExprElement {
     super();
   }
 
-  toString() { return this.o.replace('//', '/'); }
+  toString() {
+    return this.o.replace('//', '/');
+  }
 
-  toVoice() { return VOICE_STRINGS[this.o] || this.o; }
+  toVoice() {
+    return VOICE_STRINGS[this.o] || this.o;
+  }
 
-  get functions() { return [this.o]; }
+  get functions() {
+    return [this.o];
+  }
 
   toMathML() {
     const op = escape(this.toString());
