@@ -1,11 +1,12 @@
 # Hilbert.ts
 
+[![Build Status](https://travis-ci.org/mathigon/hilbert.js.svg?branch=master)](https://travis-ci.org/mathigon/hilbert.js)
+[![npm](https://img.shields.io/npm/v/@mathigon/hilbert.svg)](https://www.npmjs.com/package/@mathigon/hilbert)
+[![npm](https://img.shields.io/github/license/mathigon/hilbert.js.svg)](https://github.com/mathigon/hilbert.js/blob/master/LICENSE)
+
 Hilbert.ts is a TypeScript library for expression parsing, simplification, and
 MathML rendering. It was developed for [Mathigon.org](https://mathigon.org), an
 award-winning mathematics education project.
-
-[![npm](https://img.shields.io/npm/v/@mathigon/hilbert.svg)](https://www.npmjs.com/package/@mathigon/hilbert)
-[![npm](https://img.shields.io/github/license/mathigon/hilbert.js.svg)](https://github.com/mathigon/hilbert.js/blob/master/LICENSE)
 
 
 ## Open Issues
