@@ -23,7 +23,7 @@
     "test": "ts-node node_modules/tape/bin/tape test/**/*.ts",
     "prepublish": "npm test && npm run lint && npm run build",
     "build": "rollup --config",
-    "lint": "eslint . --ext .ts --fix"
+    "lint": "eslint . --ext .ts"
   },
   "dependencies": {
     "@mathigon/fermat": "^0.5.0",
@@ -46,6 +46,26 @@
   "renovate": {
     "extends": [
       "config:base"
+    ],
+    "schedule": [
+      "every weekend"
+    ],
+    "packageRules": [
+      {
+        "updateTypes": [
+          "patch",
+          "pin",
+          "digest"
+        ],
+        "automerge": true
+      },
+      {
+        "packagePatterns": [
+          "eslint",
+          "^@types"
+        ],
+        "automerge": true
+      }
     ]
   }
 }
