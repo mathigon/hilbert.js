@@ -122,6 +122,7 @@ export class ExprFunction extends ExprElement {
       return this.fn + this.args.join(', ') + BRACKETS[this.fn];
     }
 
+    if (this.fn === 'abs') return `|${this.args.join(', ')}|`;
     if (isOneOf(this.fn, '!', '%')) return args[0] + this.fn;
 
     // TODO Implement other functions

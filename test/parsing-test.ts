@@ -18,7 +18,6 @@ tape('basics', (test) => {
   test.equal(str('x + y'), 'x + y');
   test.equal(str('aa + bb + cc'), 'aa + bb + cc');
   test.equal(str('5x + 2'), '5 x + 2');
-  test.equal(str('|a|'), 'abs(a)');
   test.end();
 });
 
@@ -57,7 +56,24 @@ tape('symbols', (test) => {
   test.equal(str('AA A'), '∀ A');
   test.equal(str('EE E'), '∃ E');
   test.equal(str('x in y'), 'x ∈ y');
+  test.equal(str('x cup y'), 'x ∪ y');
+  test.equal(str('x ∩ y'), 'x ∩ y');
   test.equal(str('a != b'), 'a ≠ b');
+  test.end();
+});
+
+tape('brackets', (test) => {
+  test.equal(str('2 * (a + b)'), '2 · (a + b)');
+  test.equal(str('2 * [a + b]'), '2 · [a + b]');
+  test.equal(str('2 * {a + b}'), '2 · {a + b}');
+
+  test.equal(str('2 * abs(a + b)'), '2 · |a + b|');
+  test.equal(str('P(A | B)'), 'P(A | B)');
+
+  test.throws(() => expr('(a + b]'));
+  test.throws(() => expr('{a + b)'));
+  test.throws(() => expr('[a + b}'));
+
   test.end();
 });
 

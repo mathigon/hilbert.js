@@ -181,7 +181,7 @@ export function matchBrackets(tokens: ExprElement[]) {
   for (const t of tokens) {
     const lastOpen = last(stack).length ? (last(stack)[0] as ExprOperator).o : undefined;
 
-    if (isOperator(t, ') ] }') || (isOperator(t, '|') && lastOpen === '|')) {
+    if (isOperator(t, ') ] }')) {
 
       if (!isOperator(t, BRACKETS[lastOpen!])) {
         throw ExprError.conflictingBrackets((t as ExprOperator).o);
@@ -193,17 +193,15 @@ export function matchBrackets(tokens: ExprElement[]) {
       // Check if this is a normal bracket, or a function call.
       // Terms like x(y) are treated as functions, rather than implicit
       // multiplication, except for π(y).
-      const isFn = (isOperator(t, ')') && last(term) instanceof
-                    ExprIdentifier && (last(term) as ExprIdentifier).i !== 'π');
-      const fnName = isFn ? (term.pop() as ExprIdentifier).i :
-                     isOperator(t, '|') ? 'abs' :
-                     (closed![0] as ExprOperator).o;
+      const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier &&
+                    (last(term) as ExprIdentifier).i !== 'π');
+      const fnName = isFn ? (term.pop() as ExprIdentifier).i : (closed![0] as ExprOperator).o;
 
       // Support multiple arguments for function calls.
       const args = splitArray(closed!.slice(1), a => isOperator(a, ','));
       term.push(new ExprFunction(fnName, args.map(prepareTerm)));
 
-    } else if (isOperator(t, '( [ { |')) {
+    } else if (isOperator(t, '( [ {')) {
       stack.push([t]);
 
     } else {

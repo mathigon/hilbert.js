@@ -128,7 +128,9 @@ tape('Roots', (test) => {
 tape('Groupings', (test) => {
   test.equal(mathML('(a+b)'),
       '<mfenced open="(" close=")"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
-  test.equal(mathML('|a+b|'),
+  test.equal(mathML('{a+b}'),
+      '<mfenced open="{" close="}"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
+  test.equal(mathML('abs(a+b)'),
       '<mfenced open="|" close="|"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('a,b,c'),
       '<mi>a</mi><mo value=",">,</mo><mi>b</mi><mo value=",">,</mo><mi>c</mi>');

@@ -17,7 +17,6 @@ export const BRACKETS: Obj<string> = {
   '(': ')',
   '[': ']',
   '{': '}',
-  '|': '|',
 };
 
 export const SPECIAL_OPERATORS: Obj<string> = {
@@ -51,6 +50,8 @@ export const SPECIAL_OPERATORS: Obj<string> = {
   'sube': '⊆',
   'prop': '∝',
   'oo': '∞',
+  'cap': '∩',
+  'cup': '∪',
 
   '<-': '←',
   '->': '→',
