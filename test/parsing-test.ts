@@ -85,3 +85,12 @@ tape('errors', (test) => {
   test.throws(() => expr('(+) - a').collapse());
   test.end();
 });
+
+const setEquals = <T>(l: Set<T>, r: Set<T>) => l.size === r.size && Array.from(l).every(e => r.has(e));
+
+tape('inference', (test) => {
+  const terms = Expression.inferTermTypes(expr('f(a+b)').collapse());
+  test.ok(setEquals(new Set(['f', '+']), terms.fns));
+  test.ok(setEquals(new Set(['a', 'b']), terms.identifiers));
+  test.end();
+});
