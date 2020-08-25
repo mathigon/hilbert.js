@@ -94,3 +94,11 @@ tape('inference', (test) => {
   test.ok(setEquals(new Set(['a', 'b']), terms.identifiers));
   test.end();
 });
+
+tape('context', (test) => {
+  const solution = expr('2x*(a+b)').collapse();
+  const context = Expression.inferTermTypes(solution);
+  const student = Expression.parse('2x(a+b)', false, context).collapse();
+  test.equals(student.toString(), solution.toString());
+  test.end();
+});

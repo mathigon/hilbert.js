@@ -175,7 +175,7 @@ function prepareTerm(tokens: ExprElement[]) {
   return makeTerm(tokens);
 }
 
-export function matchBrackets(tokens: ExprElement[]) {
+export function matchBrackets(tokens: ExprElement[], context?: {fns?: Set<string>, identifiers?: Set<string>}) {
   const stack: ExprElement[][] = [[]];
 
   for (const t of tokens) {
@@ -190,11 +190,16 @@ export function matchBrackets(tokens: ExprElement[]) {
       const closed = stack.pop();
       const term = last(stack);
 
+      const safeIdentifiers = (context && context.identifiers) || new Set([]);
+
       // Check if this is a normal bracket, or a function call.
       // Terms like x(y) are treated as functions, rather than implicit
-      // multiplication, except for π(y).
+      // multiplication, except for π(y) and terms explicitly included in
+      // context.identifiers
       const isFn = (isOperator(t, ')') && last(term) instanceof ExprIdentifier &&
+                    !safeIdentifiers.has((last(term) as ExprIdentifier).i) &&
                     (last(term) as ExprIdentifier).i !== 'π');
+
       const fnName = isFn ? (term.pop() as ExprIdentifier).i : (closed![0] as ExprOperator).o;
 
       // Support multiple arguments for function calls.
