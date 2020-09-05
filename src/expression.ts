@@ -15,9 +15,9 @@ import {tokenize, matchBrackets} from './parser';
  * Parses a string to an expression.
  *
  * If `context` is supplied, interpret `f(a+b)` as `f*(a+b)` if `f` is in
- * `context.identifiers`.
+ * `context.variables`.
  */
-function parse(str: string, collapse = false, context?: {fns?: Set<string>, identifiers?: Set<string>}) {
+function parse(str: string, collapse = false, context?: {variables?: string[]}) {
   const expr = matchBrackets(tokenize(str), context);
   return collapse ? expr.collapse() : expr;
 }

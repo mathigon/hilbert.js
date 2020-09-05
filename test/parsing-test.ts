@@ -86,19 +86,16 @@ tape('errors', (test) => {
   test.end();
 });
 
-const setEquals = <T>(l: Set<T>, r: Array<T>) =>
-  l.size === r.length && Array.from(l).every(e => r.includes(e));
-
-tape('inference', (test) => {
-  const terms = expr('f(a+b)').collapse();
-  test.ok(setEquals(new Set(['f', '+']), terms.functions));
-  test.ok(setEquals(new Set(['a', 'b']), terms.variables));
+tape('extract functions and variables', (test) => {
+  const terms = expr('x * f(a+b)').collapse();
+  test.same(terms.functions, ['×', 'f', '+']);
+  test.same(terms.variables, ['x', 'a', 'b']);
   test.end();
 });
 
 tape('context', (test) => {
   const solution = expr('2x*(a+b)').collapse();
-  const context = {fns: new Set(solution.functions), identifiers: new Set(solution.variables)};
+  const context = {variables: solution.variables};
   const student = Expression.parse('2x(a+b)', false, context).collapse();
   test.equals(student.toString(), solution.toString());
   test.end();
