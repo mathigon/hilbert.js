@@ -8,7 +8,7 @@ import {unique, cache, Obj} from '@mathigon/core';
 import {nearlyEquals} from '@mathigon/fermat';
 import {ExprElement} from './elements';
 import {CONSTANTS} from './symbols';
-import {tokenize, matchBrackets, inferTermTypes} from './parser';
+import {tokenize, matchBrackets} from './parser';
 
 
 /**
@@ -55,5 +55,4 @@ function numEquals(expr1: ExprElement, expr2: ExprElement) {
 export const Expression = {
   numEquals,
   parse: cache(parse),
-  inferTermTypes,
 };

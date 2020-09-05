@@ -86,18 +86,19 @@ tape('errors', (test) => {
   test.end();
 });
 
-const setEquals = <T>(l: Set<T>, r: Set<T>) => l.size === r.size && Array.from(l).every(e => r.has(e));
+const setEquals = <T>(l: Set<T>, r: Array<T>) =>
+  l.size === r.length && Array.from(l).every(e => r.includes(e));
 
 tape('inference', (test) => {
-  const terms = Expression.inferTermTypes(expr('f(a+b)').collapse());
-  test.ok(setEquals(new Set(['f', '+']), terms.fns));
-  test.ok(setEquals(new Set(['a', 'b']), terms.identifiers));
+  const terms = expr('f(a+b)').collapse();
+  test.ok(setEquals(new Set(['f', '+']), terms.functions));
+  test.ok(setEquals(new Set(['a', 'b']), terms.variables));
   test.end();
 });
 
 tape('context', (test) => {
   const solution = expr('2x*(a+b)').collapse();
-  const context = Expression.inferTermTypes(solution);
+  const context = {fns: new Set(solution.functions), identifiers: new Set(solution.variables)};
   const student = Expression.parse('2x(a+b)', false, context).collapse();
   test.equals(student.toString(), solution.toString());
   test.end();

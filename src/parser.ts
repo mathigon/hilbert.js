@@ -190,7 +190,7 @@ export function matchBrackets(tokens: ExprElement[], context?: {fns?: Set<string
       const closed = stack.pop();
       const term = last(stack);
 
-      const safeIdentifiers = (context && context.identifiers) || new Set([]);
+      const safeIdentifiers = context?.identifiers || new Set([]);
 
       // Check if this is a normal bracket, or a function call.
       // Terms like x(y) are treated as functions, rather than implicit
@@ -295,22 +295,4 @@ export function collapseTerm(tokens: ExprElement[]) {
 
   if (tokens.length > 1) throw ExprError.invalidExpression();
   return tokens[0];
-}
-
-export function inferTermTypes(e: ExprElement): {fns: Set<string>, identifiers: Set<string>} {
-  const fns = new Set<string>();
-  const identifiers = new Set<string>();
-  const collectTerm = (terms: ExprElement[]) => {
-    for (const term of terms) {
-      if (term instanceof ExprIdentifier) {
-        identifiers.add(term.i);
-      } else if (term instanceof ExprFunction) {
-        fns.add(term.fn);
-        collectTerm(term.args);
-      }
-    }
-  };
-  collectTerm([e]);
-
-  return {fns, identifiers};
 }
