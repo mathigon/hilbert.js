@@ -85,3 +85,18 @@ tape('errors', (test) => {
   test.throws(() => expr('(+) - a').collapse());
   test.end();
 });
+
+tape('extract functions and variables', (test) => {
+  const terms = expr('x * f(a+b)').collapse();
+  test.same(terms.functions, ['×', 'f', '+']);
+  test.same(terms.variables, ['x', 'a', 'b']);
+  test.end();
+});
+
+tape('context', (test) => {
+  const solution = expr('2x*(a+b)').collapse();
+  const context = {variables: solution.variables};
+  const student = Expression.parse('2x(a+b)', false, context).collapse();
+  test.equals(student.toString(), solution.toString());
+  test.end();
+});
