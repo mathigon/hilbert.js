@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@mathigon/fermat": "^0.6.0",
-    "@mathigon/core": "^0.5.2"
+    "@mathigon/core": "^0.6.0"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "8.0.0",
