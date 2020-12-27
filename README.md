@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/mathigon/hilbert.js.svg?branch=master)](https://travis-ci.org/mathigon/hilbert.js)
 [![npm](https://img.shields.io/npm/v/@mathigon/hilbert.svg)](https://www.npmjs.com/package/@mathigon/hilbert)
 [![npm](https://img.shields.io/github/license/mathigon/hilbert.js.svg)](https://github.com/mathigon/hilbert.js/blob/master/LICENSE)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmathigon%2Fhilbert.js.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmathigon%2Fhilbert.js?ref=badge_shield)
 
 Hilbert.ts is a TypeScript library for expression parsing, simplification, and
 MathML rendering. It was developed for [Mathigon.org](https://mathigon.org), an
@@ -46,3 +47,6 @@ Contributor License Agreement](https://gist.github.com/plegner/5ad5b7be2948a4ad0
 
 Copyright © Mathigon ([dev@mathigon.org](mailto:dev@mathigon.org))  
 Released under the [MIT license](LICENSE)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmathigon%2Fhilbert.js.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmathigon%2Fhilbert.js?ref=badge_large)
