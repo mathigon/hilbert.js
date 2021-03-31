@@ -62,9 +62,9 @@ export class ExprFunction extends ExprElement {
       case 'sin':
         return Math.sin(args[0]);
       case 'cos':
-        return Math.sin(args[0]);
+        return Math.cos(args[0]);
       case 'tan':
-        return Math.sin(args[0]);
+        return Math.tan(args[0]);
       case 'log':
         return Math.log(args[0]) / Math.log(args[1] || Math.E);
       case 'sup':
