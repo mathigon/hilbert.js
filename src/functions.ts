@@ -4,7 +4,8 @@
 // =============================================================================
 
 
-import {unique, flatten, words, isOneOf, join} from '@mathigon/core';
+import {unique, flatten, words, isOneOf, join, repeat} from '@mathigon/core';
+import {evaluate, interval, Interval} from './eval';
 import {collapseTerm} from './parser';
 import {BRACKETS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
 import {ExprElement, ExprNumber, CustomFunction, MathMLMap, VarMap, ExprMap} from './elements';
@@ -46,38 +47,29 @@ export class ExprFunction extends ExprElement {
 
   evaluate(vars: VarMap = {}) {
     const args = this.args.map(a => a.evaluate(vars));
+
     if (this.fn in vars) return (vars[this.fn] as CustomFunction)(...args);
+    if (this.fn === '+') return evaluate.add(...args);
+    if (this.fn === '−') return evaluate.sub(...args);
+    if (['*', '·', '×'].includes(this.fn)) return evaluate.mul(...args);
+    if (this.fn === '/') return evaluate.div(...args);
+    if (this.fn === 'sup') return evaluate.sup(...args);
+    if (isSpecialFunction(this.fn)) return evaluate[this.fn](...args);
+    if (this.fn === '(') return args[0];
+    throw ExprError.undefinedFunction(this.fn);
+  }
 
-    switch (this.fn) {
-      case '+':
-        return args.reduce((a, b) => a + b, 0);
-      case '−':
-        return (args.length > 1) ? args[0] - args[1] : -args[0];
-      case '*':
-      case '·':
-      case '×':
-        return args.reduce((a, b) => a * b, 1);
-      case '/':
-        return args[0] / args[1];
-      case 'sin':
-        return Math.sin(args[0]);
-      case 'cos':
-        return Math.cos(args[0]);
-      case 'tan':
-        return Math.tan(args[0]);
-      case 'log':
-        return Math.log(args[0]) / Math.log(args[1] || Math.E);
-      case 'sup':
-        return Math.pow(args[0], args[1]);
-      case 'sqrt':
-        return Math.sqrt(args[0]);
-      case 'root':
-        return Math.pow(args[0], 1 / args[1]);
-      case '(':
-        return args[0];
-        // TODO Implement for all functions
-    }
+  interval(vars: VarMap = {}): Interval {
+    if (this.fn in vars) return repeat(this.evaluate(vars), 2) as Interval;
 
+    const args = this.args.map(a => a.interval(vars));
+    if (this.fn === '+') return interval.add(...args);
+    if (this.fn === '−') return interval.sub(...args);
+    if (['*', '·', '×'].includes(this.fn)) return interval.mul(...args);
+    if (this.fn === '/') return interval.div(...args);
+    if (this.fn === 'sup') return interval.sup(...args);
+    if (isSpecialFunction(this.fn)) return interval[this.fn](...args);
+    if (this.fn === '(') return args[0];
     throw ExprError.undefinedFunction(this.fn);
   }
 

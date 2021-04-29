@@ -132,13 +132,14 @@ export function escape(char: string) {
   return (char in ESCAPES) ? ESCAPES[char] : char;
 }
 
-const SPECIAL = new Set<string>(
-    ['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin',
-      'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth', 'exp',
-      'log', 'ln', 'det', 'dim', 'mod', 'gcd', 'lcm', 'min', 'max']);
+const SPECIAL_FUNCTIONS = ['abs', 'round', 'floor', 'ceil', 'max', 'min', 'mod',
+  'lcm', 'gcd', 'gcf', 'log', 'exp', 'ln', 'sqrt', 'root', 'sin', 'cos', 'tan',
+  'sec', 'csc', 'cot', 'cosec', 'cotan', 'arcsin', 'arccos', 'arctan', 'sinh',
+  'cosh', 'tanh', 'sech', 'csch', 'coth', 'cosech'] as const;
+export type SpecialFunction = typeof SPECIAL_FUNCTIONS[number];
 
-export function isSpecialFunction(fn: string) {
-  return SPECIAL.has(fn);
+export function isSpecialFunction(fn: string): fn is SpecialFunction {
+  return SPECIAL_FUNCTIONS.includes(fn as SpecialFunction);
 }
 
 export const VOICE_STRINGS: Obj<string> = {

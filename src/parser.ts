@@ -274,8 +274,7 @@ export function collapseTerm(tokens: ExprElement[]) {
     i -= 1;
   }
 
-  // Match comparison and division operators.
-  findBinaryFunction(tokens, '= < > ≤ ≥');
+  // Match division operators.
   findBinaryFunction(tokens, '// ÷');
 
   // Match multiplication operators.
@@ -291,6 +290,9 @@ export function collapseTerm(tokens: ExprElement[]) {
   // Match + operators.
   if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
   tokens = findAssociativeFunction(tokens, '+');
+
+  // Match comparison operators.
+  findBinaryFunction(tokens, '= < > ≤ ≥');
 
   if (tokens.length > 1) throw ExprError.invalidExpression();
   return tokens[0];

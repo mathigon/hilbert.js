@@ -5,6 +5,7 @@
 
 
 import {Obj} from '@mathigon/core';
+import {Interval} from './eval';
 import {CONSTANTS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
 import {ExprError} from './errors';
 
@@ -15,7 +16,7 @@ export interface MathMLArgument {
 }
 
 export type CustomFunction = ((...args: number[]) => number);
-export type VarMap = Obj<number|CustomFunction>;
+export type VarMap = Obj<number|Interval|CustomFunction>;
 export type ExprMap = Obj<ExprElement>;
 export type MathMLMap = Obj<(...args: MathMLArgument[]) => string>;
 
@@ -28,6 +29,10 @@ export abstract class ExprElement {
   /** Evaluates an expression using a given map of variables and functions. */
   evaluate(_vars: VarMap = {}): number {
     return NaN;
+  }
+
+  interval(vars: VarMap = {}): Interval {
+    return [this.evaluate(vars), this.evaluate(vars)];
   }
 
   /** Substitutes a new expression for a variable. */
@@ -105,6 +110,13 @@ export class ExprIdentifier extends ExprElement {
   evaluate(vars: VarMap = {}) {
     if (this.i in vars) return vars[this.i] as number;
     if (this.i in CONSTANTS) return CONSTANTS[this.i];
+    throw ExprError.undefinedVariable(this.i);
+  }
+
+  interval(vars: VarMap = {}): Interval {
+    const x = vars[this.i] ?? CONSTANTS[this.i];
+    if (Array.isArray(x)) return x;
+    if (typeof x === 'number') return [x, x];
     throw ExprError.undefinedVariable(this.i);
   }
 

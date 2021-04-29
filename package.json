@@ -1,6 +1,6 @@
 {
   "name": "@mathigon/hilbert",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "JavaScript expression parsing, MathML rendering and CAS.",
   "keywords": [
     "mathematics",
