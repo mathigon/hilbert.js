@@ -67,7 +67,7 @@ tape('brackets', (test) => {
   test.equal(str('2 * [a + b]'), '2 · [a + b]');
   test.equal(str('2 * {a + b}'), '2 · {a + b}');
 
-  test.equal(str('2 * abs(a + b)'), '2 · |a + b|');
+  test.equal(str('2 * abs(a + b)'), '2 · abs(a + b)');
   test.equal(str('P(A | B)'), 'P(A | B)');
 
   test.throws(() => expr('(a + b]'));
