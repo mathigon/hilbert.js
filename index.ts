@@ -6,5 +6,5 @@
 
 export {ExprError} from './src/errors';
 export {Expression} from './src/expression';
-export {ExprElement} from './src/elements';
+export {ExprElement, ExprIdentifier} from './src/elements';
 export {ExprFunction} from './src/functions';
