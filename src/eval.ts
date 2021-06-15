@@ -4,6 +4,7 @@
 // =============================================================================
 
 
+import {total} from '@mathigon/core';
 import {gcd, isBetween, lcm} from '@mathigon/fermat';
 import {SpecialFunction} from './symbols';
 
@@ -102,7 +103,7 @@ function pow(a: Interval, b: Interval): Interval {
     if (k === 0) return [hasZero(a) ? 0 : 1, 1];
     if (k % 2) return int(a[0] ** k, a[1] ** k);
     if (hasZero(a)) return [0, Math.max(a[0] ** k, a[1] ** k)];
-    return [a[1] ** k, a[0] ** k];
+    return range(a[1] ** k, a[0] ** k);
   }
 
   return EMPTY;  // TODO Implement this!
@@ -119,9 +120,12 @@ function intervalMod(a: Interval, m = TWO_PI): Interval {
 // Interval Evaluation
 
 export const interval: Record<Functions, (...args: Interval[]) => Interval> = {
-  add: (a, b) => int(a[0] + b[0], a[1] + b[1]),
+  add: (...args) => int(total(args.map(a => a[0])), total(args.map(a => a[1]))),
   sub: (a, b) => b !== undefined ? int(a[0] - b[1], a[1] - b[0]) : int(-a[1], -a[0]),
-  mul: (a, b) => range(a[0] * b[0], a[0] * b[1], a[1] * b[0], a[1] * b[1]),
+  mul: (a, ...b) => {
+    if (b.length > 1) b = [interval.mul(...b)];
+    return range(a[0] * b[0][0], a[0] * b[0][1], a[1] * b[0][0], a[1] * b[0][1]);
+  },
   div: (a, b) => hasZero(b)? WHOLE : range(a[0] / b[0], a[0] / b[1], a[1] / b[0], a[1] / b[1]),
 
   abs: (a) => {

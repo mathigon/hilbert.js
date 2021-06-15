@@ -246,6 +246,10 @@ export class ExprTerm extends ExprElement {
     return this.collapse().evaluate(vars);
   }
 
+  interval(vars: VarMap = {}) {
+    return this.collapse().interval(vars);
+  }
+
   substitute(vars: ExprMap = {}) {
     return this.collapse().substitute(vars);
   }
