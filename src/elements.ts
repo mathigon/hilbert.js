@@ -5,6 +5,7 @@
 
 
 import {Interval} from './eval';
+import {Expression} from './expression';
 import {CONSTANTS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
 import {ExprError} from './errors';
 
@@ -15,7 +16,7 @@ export interface MathMLArgument {
 }
 
 export type CustomFunction = ((...args: number[]) => number);
-export type VarMap = Record<string, number|Interval|ExprElement|CustomFunction>;
+export type VarMap = Record<string, number|string|Interval|ExprElement|CustomFunction>;
 export type ExprMap = Record<string, ExprElement>;
 export type MathMLMap = Record<string, (...args: MathMLArgument[]) => string>;
 
@@ -84,15 +85,16 @@ export abstract class ExprElement {
 
 const LOOP_DETECTION = new Set<string>();
 
+// TODO Cache results for performance!
 function evaluateHelper(name: string, vars: VarMap, nested = false): number|Interval {
-  const value = vars[name] ?? CONSTANTS[name];
+  let value = vars[name] ?? CONSTANTS[name];
   if (!value) throw ExprError.undefinedVariable(name);
 
-  if (value instanceof ExprElement) {
+  if (typeof value === 'string' || value instanceof ExprElement) {
     if (!nested) LOOP_DETECTION.clear();
     if (LOOP_DETECTION.has(name)) throw ExprError.evalLoop(name);
     LOOP_DETECTION.add(name);
-    // TODO Cache results for performance
+    if (typeof value === 'string') value = Expression.parse(value);
     return value.evaluate(vars, true);
   } else if (typeof value === 'function') {
     return value();

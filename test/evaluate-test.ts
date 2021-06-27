@@ -58,5 +58,6 @@ tape('Nested Expressions', (test) => {
   test.equal(value('a', {a: expr('1+2')}), 3);
   test.equal(value('a', {a: expr('b'), b: expr('3+4')}), 7);
   test.throws(() => value('a', {a: expr('b+1'), b: expr('2a')}));
+  test.equal(value('2a', {a: 'sin(pi/2)'}), 2);
   test.end();
 });
