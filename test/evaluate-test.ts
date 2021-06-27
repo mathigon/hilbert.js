@@ -4,13 +4,13 @@
 // =============================================================================
 
 
-import {Obj} from '@mathigon/core';
 import * as tape from 'tape';
 import {Expression} from '../index';
+import {VarMap} from '../src/elements';
 
 
 const expr = (src: string) => Expression.parse(src);
-const value = (src: string, vars?: Obj<number>) => expr(src)
+const value = (src: string, vars?: VarMap) => expr(src)
     .evaluate(vars || {});
 
 
@@ -51,5 +51,13 @@ tape('Invalid', (test) => {
   test.throws(() => value('2 + * 3'));
   test.throws(() => value('2 3'));
   test.throws(() => value('4 sin(0) 2'));
+  test.end();
+});
+
+tape('Nested Expressions', (test) => {
+  test.equal(value('a', {a: expr('1+2')}), 3);
+  test.equal(value('a', {a: expr('b'), b: expr('3+4')}), 7);
+  test.throws(() => value('a', {a: expr('b+1'), b: expr('2a')}));
+  test.equal(value('2a', {a: 'sin(pi/2)'}), 2);
   test.end();
 });
