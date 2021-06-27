@@ -4,7 +4,6 @@
 // =============================================================================
 
 
-import {Obj} from '@mathigon/core';
 import {Interval} from './eval';
 import {CONSTANTS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
 import {ExprError} from './errors';
@@ -16,9 +15,12 @@ export interface MathMLArgument {
 }
 
 export type CustomFunction = ((...args: number[]) => number);
-export type VarMap = Obj<number|Interval|CustomFunction>;
-export type ExprMap = Obj<ExprElement>;
-export type MathMLMap = Obj<(...args: MathMLArgument[]) => string>;
+export type VarMap = Record<string, number|Interval|ExprElement|CustomFunction>;
+export type ExprMap = Record<string, ExprElement>;
+export type MathMLMap = Record<string, (...args: MathMLArgument[]) => string>;
+
+const toNumber = (x: number|Interval) => ((typeof x === 'number') ? x : x[0]);
+const toInterval = (x: number|Interval): Interval => ((typeof x === 'number') ? [x, x] : x);
 
 
 /**
@@ -27,12 +29,12 @@ export type MathMLMap = Obj<(...args: MathMLArgument[]) => string>;
 export abstract class ExprElement {
 
   /** Evaluates an expression using a given map of variables and functions. */
-  evaluate(_vars: VarMap = {}): number {
+  evaluate(_vars: VarMap = {}, _privateNested?: boolean): number {
     return NaN;
   }
 
-  interval(vars: VarMap = {}): Interval {
-    return [this.evaluate(vars), this.evaluate(vars)];
+  interval(vars: VarMap = {}, _privateNested?: boolean): Interval {
+    return toInterval(this.evaluate(vars));
   }
 
   /** Substitutes a new expression for a variable. */
@@ -76,6 +78,30 @@ export abstract class ExprElement {
   }
 }
 
+
+// -----------------------------------------------------------------------------
+// Evaluation tools
+
+const LOOP_DETECTION = new Set<string>();
+
+function evaluateHelper(name: string, vars: VarMap, nested = false): number|Interval {
+  const value = vars[name] ?? CONSTANTS[name];
+  if (!value) throw ExprError.undefinedVariable(name);
+
+  if (value instanceof ExprElement) {
+    if (!nested) LOOP_DETECTION.clear();
+    if (LOOP_DETECTION.has(name)) throw ExprError.evalLoop(name);
+    LOOP_DETECTION.add(name);
+    // TODO Cache results for performance
+    return value.evaluate(vars, true);
+  } else if (typeof value === 'function') {
+    return value();
+  } else {
+    return value;
+  }
+}
+
+
 // -----------------------------------------------------------------------------
 
 export class ExprNumber extends ExprElement {
@@ -107,17 +133,12 @@ export class ExprIdentifier extends ExprElement {
     super();
   }
 
-  evaluate(vars: VarMap = {}) {
-    if (this.i in vars) return vars[this.i] as number;
-    if (this.i in CONSTANTS) return CONSTANTS[this.i];
-    throw ExprError.undefinedVariable(this.i);
+  evaluate(vars: VarMap = {}, privateNested?: boolean) {
+    return toNumber(evaluateHelper(this.i, vars, privateNested));
   }
 
-  interval(vars: VarMap = {}): Interval {
-    const x = vars[this.i] ?? CONSTANTS[this.i];
-    if (Array.isArray(x)) return x;
-    if (typeof x === 'number') return [x, x];
-    throw ExprError.undefinedVariable(this.i);
+  interval(vars: VarMap = {}, privateNested?: boolean): Interval {
+    return toInterval(evaluateHelper(this.i, vars, privateNested));
   }
 
   toMathML() {
@@ -151,9 +172,8 @@ export class ExprString extends ExprElement {
     super();
   }
 
-  evaluate(vars: VarMap = {}) {
-    if (this.s in vars) return vars[this.s] as number;
-    throw ExprError.undefinedVariable(this.s);
+  evaluate(vars: VarMap = {}, privateNested?: boolean) {
+    return toNumber(evaluateHelper(this.s, vars, privateNested));
   }
 
   toString() {

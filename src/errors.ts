@@ -26,6 +26,10 @@ export class ExprError extends Error {
     return new ExprError('EvalError', `Undefined function “${x}”.`);
   }
 
+  static evalLoop(x: string) {
+    return new ExprError('EvalError', `Loop in nested evaluation “${x}”.`);
+  }
+
 
   // ---------------------------------------------------------------------------
   // Syntax Errors
