@@ -88,7 +88,7 @@ const LOOP_DETECTION = new Set<string>();
 // TODO Cache results for performance!
 function evaluateHelper(name: string, vars: VarMap, nested = false): number|Interval {
   let value = vars[name] ?? CONSTANTS[name];
-  if (!value) throw ExprError.undefinedVariable(name);
+  if (value === undefined) throw ExprError.undefinedVariable(name);
 
   if (typeof value === 'string' || value instanceof ExprElement) {
     if (!nested) LOOP_DETECTION.clear();
