@@ -50,7 +50,7 @@ export abstract class ExprElement {
 
   /** Returns a list of all variables used in the expression (excluding defined constants). */
   get unknowns(): string[] {
-    return this.variables.filter(v => !CONSTANTS.hasOwnProperty(v));
+    return this.variables.filter(v => !Object.prototype.hasOwnProperty.call(CONSTANTS, v));
   }
 
   /** Returns a list of all variables used in the expression (including defined constants). */

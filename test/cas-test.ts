@@ -20,8 +20,8 @@ tape('NumEquals', (test) => {
   test.end();
 });
 
-tape("Variables / Known Values", (test) => {
-  test.same(expr("y = e pi x").collapse().variables, ["y", "e", "π", "x"]);
-  test.same(expr("y = e pi x").collapse().unknowns, ["y","x"]);
+tape('Variables / Known Values', (test) => {
+  test.same(expr('y = e pi x').collapse().variables, ['y', 'e', 'π', 'x']);
+  test.same(expr('y = e pi x').collapse().unknowns, ['y', 'x']);
   test.end();
 });
