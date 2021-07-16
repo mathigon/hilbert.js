@@ -19,3 +19,9 @@ tape('NumEquals', (test) => {
   test.ok(equals('6 * 10', '4 * 15'));
   test.end();
 });
+
+tape("Variables / Known Values", (test) => {
+  test.same(expr("y = e pi x").collapse().variables, ["y", "e", "π", "x"]);
+  test.same(expr("y = e pi x").collapse().unknowns, ["y","x"]);
+  test.end();
+});

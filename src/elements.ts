@@ -48,7 +48,12 @@ export abstract class ExprElement {
     return this;
   }
 
-  /** Returns a list of all variables used in the expression. */
+  /** Returns a list of all variables used in the expression (excluding defined constants). */
+  get unknowns(): string[] {
+    return this.variables.filter(v => !CONSTANTS.hasOwnProperty(v));
+  }
+
+  /** Returns a list of all variables used in the expression (including defined constants). */
   get variables(): string[] {
     return [];
   }
