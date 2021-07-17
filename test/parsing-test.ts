@@ -51,6 +51,20 @@ tape('super and subscripts', (test) => {
   test.end();
 });
 
+tape('Comparison Operators', (test) => {
+  test.equal(expr('a = b').collapse().toString(), 'a = b');
+  test.equal(expr('a = b < c').collapse().toString(), 'a = b < c');
+  test.equal(expr('a + 1 ≥ b + 2').collapse().toString(), 'a + 1 ≥ b + 2');
+  test.end();
+});
+
+tape('Unary Minus', (test) => {
+  test.throws(() => expr('1 * -1').collapse());
+  test.throws(() => expr('1 + -1').collapse());
+  test.doesNotThrow(() => expr('x = -1').collapse());
+  test.end();
+});
+
 tape('symbols', (test) => {
   test.equal(str('oo'), '∞');
   test.equal(str('AA A'), '∀ A');
@@ -83,6 +97,9 @@ tape('errors', (test) => {
   test.throws(() => expr('a + (a +)').collapse());
   test.throws(() => expr('a + (*)').collapse());
   test.throws(() => expr('(+) - a').collapse());
+  test.throws(() => expr('2 =').collapse());
+  test.throws(() => expr('2 = 1 =').collapse());
+  test.throws(() => expr('< 1').collapse());
   test.end();
 });
 

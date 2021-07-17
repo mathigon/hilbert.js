@@ -260,10 +260,20 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string,
   return result;
 }
 
-export function collapseTerm(tokens: ExprElement[]) {
+export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Filter out whitespace.
   tokens = tokens.filter(t => !(t instanceof ExprSpace));
   if (!tokens.length) throw ExprError.invalidExpression();
+
+  // Match comparison operators first
+  const comp = tokens.findIndex(t => isOperator(t, '= < > ≤ ≥'));
+  if (comp === 0) throw ExprError.startOperator(tokens[0]);
+  if (comp === tokens.length - 1) throw ExprError.endOperator(tokens[0]);
+  if (comp > 0) {
+    const left = collapseTerm(tokens.slice(0, comp));
+    const right = collapseTerm(tokens.slice(comp + 1));
+    return new ExprFunction((tokens[comp] as ExprOperator).o, [left, right]);
+  }
 
   // Match percentage and factorial operators.
   if (isOperator(tokens[0], '%!')) throw ExprError.startOperator(tokens[0]);
@@ -280,19 +290,15 @@ export function collapseTerm(tokens: ExprElement[]) {
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);
 
-  // Match - and ± operators.
+  // Match - and ± operators, including a unary -/± at the start of an expression.
   if (isOperator(tokens[0], '− ±')) {
-    tokens.splice(0, 2,
-        new ExprFunction((tokens[0] as ExprOperator).o, [tokens[1]]));
+    tokens.splice(0, 2, new ExprFunction((tokens[0] as ExprOperator).o, [tokens[1]]));
   }
   findBinaryFunction(tokens, '− ±');
 
   // Match + operators.
   if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
   tokens = findAssociativeFunction(tokens, '+');
-
-  // Match comparison operators.
-  findBinaryFunction(tokens, '= < > ≤ ≥');
 
   if (tokens.length > 1) throw ExprError.invalidExpression();
   return tokens[0];
