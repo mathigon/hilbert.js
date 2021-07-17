@@ -103,10 +103,12 @@ tape('errors', (test) => {
   test.end();
 });
 
-tape('extract functions and variables', (test) => {
+tape('extract functions, variables and unknowns', (test) => {
   const terms = expr('x * f(a+b)').collapse();
   test.same(terms.functions, ['×', 'f', '+']);
   test.same(terms.variables, ['x', 'a', 'b']);
+  test.same(expr('y = e pi x').variables, ['y', 'e', 'π', 'x']);
+  test.same(expr('y = e pi x').unknowns, ['y', 'x']);
   test.end();
 });
 
