@@ -5,8 +5,8 @@
 
 
 import {last, words} from '@mathigon/core';
-import {SPECIAL_OPERATORS, SPECIAL_IDENTIFIERS, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, BRACKETS, FUNCTION_NAMES} from './symbols';
-import {ExprNumber, ExprIdentifier, ExprOperator, ExprSpace, ExprString, ExprElement} from './elements';
+import {BRACKETS, FUNCTION_NAMES, IDENTIFIER_SYMBOLS, OPERATOR_SYMBOLS, SPECIAL_IDENTIFIERS, SPECIAL_OPERATORS} from './symbols';
+import {ExprElement, ExprIdentifier, ExprNumber, ExprOperator, ExprSpace, ExprString} from './elements';
 import {ExprFunction, ExprTerm} from './functions';
 import {ExprError} from './errors';
 
@@ -21,7 +21,7 @@ function createToken(buffer: string, type: TokenType) {
   if (type === TokenType.STR) return new ExprString(buffer);
 
   // Strings can be empty, but other types cannot.
-  if (!buffer || !type) return undefined;
+  if (!buffer || !type) return;
 
   if (type === TokenType.SPACE && buffer.length > 1) return new ExprSpace();
 
@@ -48,6 +48,8 @@ function createToken(buffer: string, type: TokenType) {
       return new ExprOperator(buffer);
     }
   }
+
+  return;
 }
 
 export function tokenize(str: string) {
@@ -59,8 +61,7 @@ export function tokenize(str: string) {
 
     // Handle Strings
     if (s === '"') {
-      const newType: TokenType = (((type as TokenType) === TokenType.STR) ?
-                                  TokenType.UNKNOWN : TokenType.STR);
+      const newType: TokenType = (((type as TokenType) === TokenType.STR) ? TokenType.UNKNOWN : TokenType.STR);
       const token = createToken(buffer, type);
       if (token) tokens.push(token);
       buffer = '';
@@ -72,9 +73,9 @@ export function tokenize(str: string) {
     }
 
     const sType = s.match(/[0-9.]/) ? TokenType.NUM :
-                  IDENTIFIER_SYMBOLS.includes(s) ? TokenType.VAR :
-                  OPERATOR_SYMBOLS.includes(s) ? TokenType.OP :
-                  s.match(/\s/) ? TokenType.SPACE : TokenType.UNKNOWN;
+      IDENTIFIER_SYMBOLS.includes(s) ? TokenType.VAR :
+        OPERATOR_SYMBOLS.includes(s) ? TokenType.OP :
+          s.match(/\s/) ? TokenType.SPACE : TokenType.UNKNOWN;
     if (!sType) throw ExprError.invalidCharacter(s);
 
     if (!type || (type === TokenType.NUM && sType !== TokenType.NUM) ||
@@ -124,8 +125,7 @@ function isOperator(expr: ExprElement, fns: string): expr is ExprOperator {
 }
 
 function removeBrackets(expr: ExprElement) {
-  return (expr instanceof ExprFunction && expr.fn === '(') ? expr.args[0] :
-         expr;
+  return (expr instanceof ExprFunction && expr.fn === '(') ? expr.args[0] : expr;
 }
 
 function findBinaryFunction(tokens: ExprElement[], fn: string) {
@@ -223,8 +223,7 @@ export function matchBrackets(tokens: ExprElement[], context?: {variables?: stri
 // -----------------------------------------------------------------------------
 // Collapse term items
 
-function findAssociativeFunction(tokens: ExprElement[], symbol: string,
-    implicit = false) {
+function findAssociativeFunction(tokens: ExprElement[], symbol: string, implicit = false) {
   const result: ExprElement[] = [];
   let buffer: ExprElement[] = [];
   let lastWasSymbol = false;
@@ -232,8 +231,7 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string,
   function clearBuffer() {
     if (lastWasSymbol) throw ExprError.invalidExpression();
     if (!buffer.length) return;
-    result.push(
-        buffer.length > 1 ? new ExprFunction(symbol[0], buffer) : buffer[0]);
+    result.push(buffer.length > 1 ? new ExprFunction(symbol[0], buffer) : buffer[0]);
     buffer = [];
   }
 
@@ -279,8 +277,7 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   if (isOperator(tokens[0], '%!')) throw ExprError.startOperator(tokens[0]);
   for (let i = 0; i < tokens.length; ++i) {
     if (!isOperator(tokens[i], '%!')) continue;
-    tokens.splice(i - 1, 2, new ExprFunction((tokens[i] as ExprOperator).o,
-        [tokens[i - 1]]));
+    tokens.splice(i - 1, 2, new ExprFunction((tokens[i] as ExprOperator).o, [tokens[i - 1]]));
     i -= 1;
   }
 

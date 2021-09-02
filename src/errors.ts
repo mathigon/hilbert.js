@@ -56,7 +56,7 @@ export class ExprError extends Error {
 
   static consecutiveOperators(x: string, y: string) {
     return new ExprError('SyntaxError',
-        `A “${x}” cannot be followed by a “${y}”.`);
+      `A “${x}” cannot be followed by a “${y}”.`);
   }
 
   static invalidExpression() {

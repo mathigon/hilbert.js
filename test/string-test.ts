@@ -4,8 +4,8 @@
 // =============================================================================
 
 
-import * as tape from 'tape';
-import {Expression} from '../index';
+import tape from 'tape';
+import {Expression} from '../src';
 
 
 const str = (src: string) => Expression.parse(src).collapse().toString();

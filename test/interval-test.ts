@@ -6,8 +6,8 @@
 
 import {Obj} from '@mathigon/core';
 import {nearlyEquals} from '@mathigon/fermat';
-import * as tape from 'tape';
-import {Expression} from '../index';
+import tape from 'tape';
+import {Expression} from '../src';
 import {Interval} from '../src/eval';
 
 

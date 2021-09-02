@@ -4,11 +4,11 @@
 // =============================================================================
 
 
-import {unique, flatten, words, isOneOf, join, repeat} from '@mathigon/core';
+import {flatten, isOneOf, join, repeat, unique, words} from '@mathigon/core';
 import {evaluate, interval, Interval} from './eval';
 import {collapseTerm} from './parser';
 import {BRACKETS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
-import {ExprElement, ExprNumber, CustomFunction, MathMLMap, VarMap, ExprMap} from './elements';
+import {CustomFunction, ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
 import {ExprError} from './errors';
 
 
@@ -96,10 +96,10 @@ export class ExprFunction extends ExprElement {
   }
 
   toString() {
-    const args = this.args.map(a => needsBrackets(a, this.fn) ? '(' + a.toString() + ')' : a.toString());
+    const args = this.args.map(a => needsBrackets(a, this.fn) ? `(${a.toString()})` : a.toString());
 
     if (this.fn === '−') {
-      return args.length > 1 ? args.join(' − ') : '−' + args[0];
+      return args.length > 1 ? args.join(' − ') : `−${args[0]}`;
     }
 
     if (this.fn === 'sup') return args.join('^');
@@ -107,7 +107,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn === 'subsup') return `${args[0]}_${args[1]}^${args[2]}`;
 
     if (words('+ * × · / = < > ≤ ≥ ≈').includes(this.fn)) {
-      return args.join(' ' + this.fn + ' ');
+      return args.join(` ${this.fn} `);
     }
 
     if (isOneOf(this.fn, '(', '[', '{')) {
@@ -127,13 +127,13 @@ export class ExprFunction extends ExprElement {
     if (this.fn in custom) {
       const argsX = args.map((a, i) => ({
         toString: () => a,
-        val: this.args[i],
+        val: this.args[i]
       }));
       return custom[this.fn](...argsX);
     }
 
     if (this.fn === '−') {
-      return argsF.length > 1 ? argsF.join('<mo value="−">−</mo>') : '<mo rspace="0" value="−">−</mo>' + argsF[0];
+      return argsF.length > 1 ? argsF.join('<mo value="−">−</mo>') : `<mo rspace="0" value="−">−</mo>${argsF[0]}`;
     }
 
     if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥', '≈')) {
@@ -180,7 +180,7 @@ export class ExprFunction extends ExprElement {
     }
 
     if (isOneOf(this.fn, '!', '%')) {
-      return argsF[0] + `<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
+      return `${argsF[0]}<mo value="${this.fn}" lspace="0">${this.fn}</mo>`;
     }
 
     if (this.fn === 'abs') {
@@ -197,8 +197,7 @@ export class ExprFunction extends ExprElement {
 
     // TODO Implement other functions
     const variant = isSpecialFunction(this.fn) ? ' mathvariant="normal"' : '';
-    return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(
-        COMMA)}</mfenced>`;
+    return `<mi${variant}>${this.fn}</mi><mfenced>${argsF.join(COMMA)}</mfenced>`;
   }
 
   toVoice(custom: MathMLMap = {}) {
@@ -208,7 +207,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn in custom) {
       const argsX = args.map((a, i) => ({
         toString: () => a,
-        val: this.args[i],
+        val: this.args[i]
       }));
       return custom[this.fn](...argsX);
     }

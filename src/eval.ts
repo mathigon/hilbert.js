@@ -82,7 +82,7 @@ export const evaluate: Record<Functions, (...args: number[]) => number> = {
   sech: (a) => 1 / Math.cosh(a),
   csch: (a) => 1 / Math.sinh(a),
   coth: (a) => 1 / Math.tanh(a),
-  cosech: (a) => evaluate.csch(a),
+  cosech: (a) => evaluate.csch(a)
 };
 
 
@@ -204,5 +204,5 @@ export const interval: Record<Functions, (...args: Interval[]) => Interval> = {
   sech: (a) => interval.div([1, 1], interval.cosh(a)),
   csch: (a) => interval.div([1, 1], interval.sinh(a)),
   coth: (a) => interval.div([1, 1], interval.tanh(a)),
-  cosech: (a) => interval.csch(a),
+  cosech: (a) => interval.csch(a)
 };

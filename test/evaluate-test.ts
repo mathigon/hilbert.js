@@ -4,14 +4,14 @@
 // =============================================================================
 
 
-import * as tape from 'tape';
-import {Expression} from '../index';
+import tape from 'tape';
+import {Expression} from '../src';
 import {VarMap} from '../src/elements';
 
 
 const expr = (src: string) => Expression.parse(src);
 const value = (src: string, vars?: VarMap) => expr(src)
-    .evaluate(vars || {});
+  .evaluate(vars || {});
 
 
 tape('Basic', (test) => {

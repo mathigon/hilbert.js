@@ -122,11 +122,11 @@ export class ExprNumber extends ExprElement {
   }
 
   toString() {
-    return '' + this.n;
+    return `${this.n}`;
   }
 
   toVoice() {
-    return '' + this.n;
+    return `${this.n}`;
   }
 
   toMathML() {
@@ -184,7 +184,7 @@ export class ExprString extends ExprElement {
   }
 
   toString() {
-    return '"' + this.s + '"';
+    return `"${this.s}"`;
   }
 
   toVoice() {
