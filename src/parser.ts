@@ -48,8 +48,6 @@ function createToken(buffer: string, type: TokenType) {
       return new ExprOperator(buffer);
     }
   }
-
-  return;
 }
 
 export function tokenize(str: string) {

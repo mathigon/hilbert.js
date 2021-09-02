@@ -1,13 +1,12 @@
 {
   "compilerOptions": {
-    "lib": ["esnext", "dom"],
+    "lib": ["esnext"],
     "target": "es2016",
     "moduleResolution": "node",
     "importHelpers": true,
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "strictFunctionTypes": true,
     "strictPropertyInitialization": true,
