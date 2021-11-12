@@ -43,6 +43,17 @@ export abstract class ExprElement {
     return this;
   }
 
+  /**
+   * Recursively substitutes a new expression for a variable.
+   * NOTE: This function does not test for cyclical dependencies, which could
+   * lead to an infinite loop. You have to manually validate expressions first!
+   */
+  recursiveSubstitute(vars: ExprMap): ExprElement {
+    const varList = Object.keys(vars);
+    if (!this.unknowns.filter(v => varList.includes(v)).length) return this;
+    return this.substitute(vars).recursiveSubstitute(vars);
+  }
+
   /** Returns the simplest mathematically equivalent expression. */
   get simplified(): ExprElement {
     return this;
