@@ -10,6 +10,7 @@ import {Expression} from '../src';
 
 const expr = (src: string) => Expression.parse(src);
 const str = (src: string) => expr(src).toString();
+const collapseStr = (src: string) => expr(src).collapse().toString();
 
 
 tape('basics', (test) => {
@@ -117,5 +118,10 @@ tape('context', (test) => {
   const context = {variables: solution.variables};
   const student = Expression.parse('2x(a+b)', false, context).collapse();
   test.equals(student.toString(), solution.toString());
+  test.end();
+});
+
+tape('mixed numbers', (test) => {
+  test.equals(collapseStr('1 1/2'), collapseStr('1 + 1/2'));
   test.end();
 });

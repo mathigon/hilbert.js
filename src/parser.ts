@@ -279,6 +279,23 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
     i -= 1;
   }
 
+  // Detect mixed numbers.
+  for (const [index, currentToken] of tokens.entries()) {
+    if (currentToken instanceof ExprFunction) {
+      const previousToken = tokens[index - 1];
+      if (
+        previousToken instanceof ExprNumber &&
+        currentToken.fn === '/'
+      ) {
+        tokens.splice(
+          index - 1,
+          2,
+          new ExprFunction('+', [previousToken, currentToken])
+        );
+      }
+    }
+  }
+
   // Match division operators.
   findBinaryFunction(tokens, '// ÷');
 
