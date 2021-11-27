@@ -281,11 +281,19 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
 
   // Detect mixed numbers.
   for (const [index, currentToken] of tokens.entries()) {
-    if (currentToken instanceof ExprFunction) {
+    if (
+      currentToken instanceof ExprFunction &&
+      currentToken.fn === '/'
+    ) {
       const previousToken = tokens[index - 1];
+      const [numerator, denominator] = currentToken.args;
       if (
         previousToken instanceof ExprNumber &&
-        currentToken.fn === '/'
+        Number.isInteger(previousToken.n) &&
+        numerator instanceof ExprNumber &&
+        Number.isInteger(numerator.n) &&
+        denominator instanceof ExprNumber &&
+        Number.isInteger(denominator.n)
       ) {
         tokens.splice(
           index - 1,
