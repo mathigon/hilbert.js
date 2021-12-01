@@ -256,6 +256,20 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string, implicit
   return result;
 }
 
+function* sequentialPairsOf<T>(items: Iterable<T>) {
+  let i = -1;
+  let a: T | undefined;
+  let b: T | undefined;
+  for (const item of items) {
+    a = b;
+    b = item;
+    if (a !== undefined) {
+      i++;
+      yield [[a, i], [b, i + 1]] as [[T, number], [T, number]];
+    }
+  }
+}
+
 export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Filter out whitespace.
   tokens = tokens.filter(t => !(t instanceof ExprSpace));
@@ -280,25 +294,24 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   }
 
   // Detect mixed numbers.
-  for (const [index, currentToken] of tokens.entries()) {
+  for (const [[a, aIndex], [b]] of sequentialPairsOf(tokens)) {
     if (
-      currentToken instanceof ExprFunction &&
-      currentToken.fn === '/'
+      b instanceof ExprFunction &&
+      b.fn === '/'
     ) {
-      const previousToken = tokens[index - 1];
-      const [numerator, denominator] = currentToken.args;
+      const [numerator, denominator] = b.args;
       if (
-        previousToken instanceof ExprNumber &&
-        Number.isInteger(previousToken.n) &&
+        a instanceof ExprNumber &&
+        Number.isInteger(a.n) &&
         numerator instanceof ExprNumber &&
         Number.isInteger(numerator.n) &&
         denominator instanceof ExprNumber &&
         Number.isInteger(denominator.n)
       ) {
         tokens.splice(
-          index - 1,
+          aIndex,
           2,
-          new ExprFunction('+', [previousToken, currentToken])
+          new ExprFunction('+', [a, b])
         );
       }
     }
