@@ -123,5 +123,7 @@ tape('context', (test) => {
 
 tape('mixed numbers', (test) => {
   test.equals(collapseStr('1 1/2'), collapseStr('1 + 1/2'));
+  test.throws(() => collapseStr('x 1/2'));
+  test.throws(() => collapseStr('1/2 1/2'));
   test.end();
 });

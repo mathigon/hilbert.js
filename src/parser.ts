@@ -301,18 +301,23 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
     ) {
       const [numerator, denominator] = b.args;
       if (
-        a instanceof ExprNumber &&
-        Number.isInteger(a.n) &&
         numerator instanceof ExprNumber &&
         Number.isInteger(numerator.n) &&
         denominator instanceof ExprNumber &&
         Number.isInteger(denominator.n)
       ) {
-        tokens.splice(
-          aIndex,
-          2,
-          new ExprFunction('+', [a, b])
-        );
+        if (
+          a instanceof ExprNumber &&
+          Number.isInteger(a.n)
+        ) {
+          tokens.splice(
+            aIndex,
+            2,
+            new ExprFunction('+', [a, b])
+          );
+        } else if (!(a instanceof ExprOperator)) {
+          throw ExprError.consecutiveOperators(a.toString(), b.toString());
+        }
       }
     }
   }
