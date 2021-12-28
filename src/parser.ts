@@ -256,20 +256,6 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string, implicit
   return result;
 }
 
-function* sequentialPairsOf<T>(items: Iterable<T>) {
-  let i = -1;
-  let a: T | undefined;
-  let b: T | undefined;
-  for (const item of items) {
-    a = b;
-    b = item;
-    if (a !== undefined) {
-      i++;
-      yield [[a, i], [b, i + 1]] as [[T, number], [T, number]];
-    }
-  }
-}
-
 export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Filter out whitespace.
   tokens = tokens.filter(t => !(t instanceof ExprSpace));
@@ -293,37 +279,22 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
     i -= 1;
   }
 
+  // Match division operators.
+  findBinaryFunction(tokens, '// ÷');
+
   // Detect mixed numbers.
-  for (const [[a, aIndex], [b]] of sequentialPairsOf(tokens)) {
-    if (
-      b instanceof ExprFunction &&
-      b.fn === '/'
-    ) {
-      const [numerator, denominator] = b.args;
-      if (
-        numerator instanceof ExprNumber &&
-        Number.isInteger(numerator.n) &&
-        denominator instanceof ExprNumber &&
-        Number.isInteger(denominator.n)
-      ) {
-        if (
-          a instanceof ExprNumber &&
-          Number.isInteger(a.n)
-        ) {
-          tokens.splice(
-            aIndex,
-            2,
-            new ExprFunction('+', [a, b])
-          );
-        } else if (!(a instanceof ExprOperator)) {
-          throw ExprError.consecutiveOperators(a.toString(), b.toString());
-        }
+  for (let i = 1; i < tokens.length; ++i) {
+    const t = tokens[i];
+    if (t instanceof ExprFunction && t.fn === '/') {
+      const s = tokens[i - 1];  // previous token
+      if (s instanceof ExprNumber) {
+        tokens.splice(i - 1, 2, new ExprFunction('+', [s, t]));
+        i -= 1;
+      } else if (!(s instanceof ExprOperator)) {
+        throw ExprError.consecutiveOperators(s.toString(), t.toString());
       }
     }
   }
-
-  // Match division operators.
-  findBinaryFunction(tokens, '// ÷');
 
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);

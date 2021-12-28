@@ -10,7 +10,6 @@ import {Expression} from '../src';
 
 const expr = (src: string) => Expression.parse(src);
 const str = (src: string) => expr(src).toString();
-const collapseStr = (src: string) => expr(src).collapse().toString();
 
 
 tape('basics', (test) => {
@@ -122,8 +121,10 @@ tape('context', (test) => {
 });
 
 tape('mixed numbers', (test) => {
-  test.equals(collapseStr('1 1/2'), collapseStr('1 + 1/2'));
-  test.throws(() => collapseStr('x 1/2'));
-  test.throws(() => collapseStr('1/2 1/2'));
+  test.equals(expr('1 1/2').collapse().toString(), '1 + 1 / 2');
+  test.equals(expr('1 1/x').collapse().toString(), '1 + 1 / x');
+  test.equals(expr('1 * 1/x').collapse().toString(), '1 × 1 / x');
+  test.throws(() => expr('x 1/2').collapse());
+  test.throws(() => expr('1/2 1/2').collapse());
   test.end();
 });
