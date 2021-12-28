@@ -4,15 +4,14 @@
 // =============================================================================
 
 
-import {Obj} from '@mathigon/core';
 import {nearlyEquals} from '@mathigon/fermat';
 import tape from 'tape';
 import {Expression} from '../src';
-import {Interval} from '../src/eval';
+import {VarMap} from '../src/elements';
 
 
 const expr = (src: string) => Expression.parse(src);
-const value = (src: string, vars?: Obj<number|Interval>) => expr(src).interval(vars || {});
+const value = (src: string, vars?: VarMap) => expr(src).interval(vars || {});
 
 
 tape('Basic', (test) => {
@@ -41,5 +40,13 @@ tape('Powers', (test) => {
   test.true(nearlyEquals(r2[0], 2));
   test.true(nearlyEquals(r2[1], 2));
 
+  test.end();
+});
+
+tape('Implicit Multiplication', (test) => {
+  test.deepEquals(value('x(x+1)', {x: 3}), [12, 12]);
+  test.deepEquals(value('x(2)', {x: (a: number) => a * 2}), [4, 4]);
+  test.throws(() => value('"a"(2)'));
+  test.throws(() => value('x(1, 2)', {x: 3}));
   test.end();
 });

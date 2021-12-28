@@ -61,3 +61,11 @@ tape('Nested Expressions', (test) => {
   test.equal(value('2a', {a: 'sin(pi/2)'}), 2);
   test.end();
 });
+
+tape('Implicit Multiplication', (test) => {
+  test.equal(value('x(x+1)', {x: 3}), 12);
+  test.equal(value('x(2)', {x: (a: number) => a * 2}), 4);
+  test.throws(() => value('"a"(2)'));
+  test.throws(() => value('x(1, 2)', {x: 3}));
+  test.end();
+});

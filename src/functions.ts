@@ -48,7 +48,13 @@ export class ExprFunction extends ExprElement {
   evaluate(vars: VarMap = {}) {
     const args = this.args.map(a => a.evaluate(vars));
 
-    if (this.fn in vars) return (vars[this.fn] as CustomFunction)(...args);
+    if (this.fn in vars) {
+      const fn = vars[this.fn];
+      if (typeof fn === 'function') return fn(...args);
+      if (typeof fn === 'number' && args.length === 1) return evaluate.mul(fn, args[0]);
+      throw ExprError.uncallableExpression(this.fn);
+    }
+
     if (this.fn === '+') return evaluate.add(...args);
     if (this.fn === '−') return evaluate.sub(...args);
     if (['*', '·', '×'].includes(this.fn)) return evaluate.mul(...args);
@@ -60,9 +66,16 @@ export class ExprFunction extends ExprElement {
   }
 
   interval(vars: VarMap = {}): Interval {
-    if (this.fn in vars) return repeat(this.evaluate(vars), 2) as Interval;
-
     const args = this.args.map(a => a.interval(vars));
+
+    if (this.fn in vars) {
+      const fn = vars[this.fn];
+      if (typeof fn === 'function') return repeat(fn(...args.map(a => a[0])), 2) as Interval;
+      if (typeof fn === 'number' && args.length === 1) return interval.mul([fn, fn], args[0]);
+      if (Array.isArray(fn) && args.length === 1) return interval.mul(fn, args[0]);
+      throw ExprError.uncallableExpression(this.fn);
+    }
+
     if (this.fn === '+') return interval.add(...args);
     if (this.fn === '−') return interval.sub(...args);
     if (['*', '·', '×'].includes(this.fn)) return interval.mul(...args);
