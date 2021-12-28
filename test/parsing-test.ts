@@ -119,3 +119,12 @@ tape('context', (test) => {
   test.equals(student.toString(), solution.toString());
   test.end();
 });
+
+tape('mixed numbers', (test) => {
+  test.equals(expr('1 1/2').collapse().toString(), '1 + 1 / 2');
+  test.equals(expr('1 1/x').collapse().toString(), '1 + 1 / x');
+  test.equals(expr('1 * 1/x').collapse().toString(), '1 × 1 / x');
+  test.throws(() => expr('x 1/2').collapse());
+  test.throws(() => expr('1/2 1/2').collapse());
+  test.end();
+});

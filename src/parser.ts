@@ -282,6 +282,20 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Match division operators.
   findBinaryFunction(tokens, '// ÷');
 
+  // Detect mixed numbers.
+  for (let i = 1; i < tokens.length; ++i) {
+    const t = tokens[i];
+    if (t instanceof ExprFunction && t.fn === '/') {
+      const s = tokens[i - 1];  // previous token
+      if (s instanceof ExprNumber) {
+        tokens.splice(i - 1, 2, new ExprFunction('+', [s, t]));
+        i -= 1;
+      } else if (!(s instanceof ExprOperator)) {
+        throw ExprError.consecutiveOperators(s.toString(), t.toString());
+      }
+    }
+  }
+
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);
 
