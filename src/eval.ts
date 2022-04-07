@@ -164,18 +164,18 @@ export const interval: Record<Functions, (...args: Interval[]) => Interval> = {
     if (isEmpty(a) || isInfinite(a)) return EMPTY;
     if (width(a) >= TWO_PI - Number.EPSILON) return [-1, 1];
     a = intervalMod(a);
-    if (a[0] >= Math.PI) return interval.sub(interval.cos(interval.sub(a, [Math.PI, Math.PI])));
+    if (a[0] > Math.PI + Number.EPSILON) return interval.sub(interval.cos(interval.sub(a, [Math.PI, Math.PI])));
 
-    // Now we know that 0 <= a[0] < pi.
-    if (a[1] <= Math.PI) return int(Math.cos(a[1]), Math.cos(a[0]));
-    if (a[1] <= TWO_PI) return int(-1, Math.max(Math.cos(a[1]), Math.cos(a[0])));
+    // Now we know that 0 < a[0] < pi.
+    if (a[1] < Math.PI - Number.EPSILON) return int(Math.cos(a[1]), Math.cos(a[0]));
+    if (a[1] < TWO_PI - Number.EPSILON) return int(-1, Math.max(Math.cos(a[1]), Math.cos(a[0])));
     return int(-1, 1);
   },
   tan: (a) => {
     if (isEmpty(a) || isInfinite(a)) return EMPTY;
     a = intervalMod(a, Math.PI);
-    if (a[0] >= HALF_PI) a = interval.sub(a, [Math.PI, Math.PI]);
-    if (a[0] <= -HALF_PI || a[1] >= HALF_PI) return WHOLE;
+    if (a[0] > HALF_PI + Number.EPSILON) a = interval.sub(a, [Math.PI, Math.PI]);
+    if (a[0] < -HALF_PI + Number.EPSILON || a[1] > HALF_PI - Number.EPSILON) return WHOLE;
     return int(Math.tan(a[0]), Math.tan(a[1]));
   },
   sec: (a) => interval.div([1, 1], interval.cos(a)),
