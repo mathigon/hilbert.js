@@ -1,6 +1,6 @@
 {
   "name": "@mathigon/hilbert",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "license": "MIT",
   "homepage": "https://mathigon.io/hilbert",
   "repository": "mathigon/hilbert.js",
@@ -12,11 +12,15 @@
     "mathml"
   ],
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   },
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
-  "typings": "dist/index.d.ts",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.esm.js",
+    "require": "./dist/index.cjs.js"
+  },
   "scripts": {
     "test": "ts-node node_modules/tape/bin/tape test/**/*.ts",
     "prepublishOnly": "npm test && npm run lint && npm run build",
@@ -27,8 +31,8 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@mathigon/core": "1.0.8",
-    "@mathigon/fermat": "1.0.9"
+    "@mathigon/core": "1.1.0",
+    "@mathigon/fermat": "1.1.0"
   },
   "devDependencies": {
     "@types/tape": "4.13.2",
