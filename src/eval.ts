@@ -5,7 +5,7 @@
 
 
 import {total} from '@mathigon/core';
-import {gcd, isBetween, lcm} from '@mathigon/fermat';
+import {gcd, isBetween, lcm, nearlyEquals} from '@mathigon/fermat';
 import {SpecialFunction} from './symbols';
 
 const OPERATORS = ['add', 'sub', 'mul', 'div', 'sup'] as const;
@@ -36,6 +36,12 @@ export const hasZero = (a: Interval) => contains(a, 0);
 
 // -----------------------------------------------------------------------------
 // Standard Evaluation
+
+export const evaluateRel: Record<'='|'<'|'>', (...args: number[]) => boolean> = {
+  '=': (a, b) => nearlyEquals(a, b),
+  '<': (a, b) => a < b,
+  '>': (a, b) => a > b
+};
 
 export const evaluate: Record<Functions, (...args: number[]) => number> = {
   add: (...args) => args.reduce((a, b) => a + b, 0),
@@ -118,6 +124,12 @@ function intervalMod(a: Interval, m = TWO_PI): Interval {
 
 // -----------------------------------------------------------------------------
 // Interval Evaluation
+
+export const intervalRel: Record<'='|'<'|'>', (...args: Interval[]) => boolean> = {
+  '=': (a, b) => (contains(a, b[0]) && contains(a, b[1])) || (contains(b, a[0]) && contains(b, a[1])),
+  '<': (a, b) => a[1] < b[0],
+  '>': (a, b) => a[1] < b[0]
+};
 
 export const interval: Record<Functions, (...args: Interval[]) => Interval> = {
   add: (...args) => int(total(args.map(a => a[0])), total(args.map(a => a[1]))),

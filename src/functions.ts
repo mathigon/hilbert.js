@@ -5,10 +5,10 @@
 
 
 import {flatten, isOneOf, join, repeat, unique, words} from '@mathigon/core';
-import {evaluate, interval, Interval} from './eval';
+import {evaluate, evaluateRel, interval, Interval, intervalRel} from './eval';
 import {collapseTerm} from './parser';
-import {BRACKETS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
-import {CustomFunction, ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
+import {BRACKETS, escape, isSpecialFunction, SpecialFunction, VOICE_STRINGS} from './symbols';
+import {ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
 import {ExprError} from './errors';
 
 
@@ -40,12 +40,29 @@ function supVoice(a: string) {
 
 
 export class ExprFunction extends ExprElement {
+  private operator?: 'add'|'sub'|'mul'|'div'|'sup'|SpecialFunction;
 
   constructor(readonly fn: string, readonly args: ExprElement[] = []) {
     super();
+    this.operator = fn === '+' ? 'add' : fn === '−' ? 'sub' :
+      '*·×'.includes(fn) ? 'mul' : fn === '/' ? 'div' : fn === 'sup' ? 'sup' :
+        isSpecialFunction(fn) ? fn : undefined;
   }
 
   evaluate(vars: VarMap = {}) {
+    if (this.fn === '{') {
+      // Piecewise functions
+      for (let i = 0; i < this.args.length; i += 1) {
+        if (this.args[i + 1].evaluate(vars)) return this.args[i].evaluate();
+      }
+      return NaN;
+    } else if (this.fn === '(') {
+      return this.args[0].evaluate(vars);
+    } else if (this.fn === '[') {
+      // TODO Evaluate matrices
+      return NaN;
+    }
+
     const args = this.args.map(a => a.evaluate(vars));
 
     if (this.fn in vars) {
@@ -55,17 +72,24 @@ export class ExprFunction extends ExprElement {
       throw ExprError.uncallableExpression(this.fn);
     }
 
-    if (this.fn === '+') return evaluate.add(...args);
-    if (this.fn === '−') return evaluate.sub(...args);
-    if (['*', '·', '×'].includes(this.fn)) return evaluate.mul(...args);
-    if (this.fn === '/') return evaluate.div(...args);
-    if (this.fn === 'sup') return evaluate.sup(...args);
-    if (isSpecialFunction(this.fn)) return evaluate[this.fn](...args);
-    if (this.fn === '(') return args[0];
+    if ('=<>'.includes(this.fn)) return evaluateRel[this.fn as '='|'<'|'>'](...args) ? 1 : 0;
+    if (this.operator) return evaluate[this.operator](...args);
     throw ExprError.undefinedFunction(this.fn);
   }
 
   interval(vars: VarMap = {}): Interval {
+    if (this.fn === '{') {
+      for (let i = 0; i < this.args.length; i += 1) {
+        if (this.args[i + 1].interval(vars)[0]) return this.args[i].interval(vars);
+      }
+      return [NaN, NaN];
+    } else if (this.fn === '(') {
+      return this.args[0].interval(vars);
+    } else if (this.fn === '[') {
+      // TODO Evaluate matrices
+      return [NaN, NaN];
+    }
+
     const args = this.args.map(a => a.interval(vars));
 
     if (this.fn in vars) {
@@ -76,13 +100,8 @@ export class ExprFunction extends ExprElement {
       throw ExprError.uncallableExpression(this.fn);
     }
 
-    if (this.fn === '+') return interval.add(...args);
-    if (this.fn === '−') return interval.sub(...args);
-    if (['*', '·', '×'].includes(this.fn)) return interval.mul(...args);
-    if (this.fn === '/') return interval.div(...args);
-    if (this.fn === 'sup') return interval.sup(...args);
-    if (isSpecialFunction(this.fn)) return interval[this.fn](...args);
-    if (this.fn === '(') return args[0];
+    if ('=<>'.includes(this.fn)) return intervalRel[this.fn as '='|'<'|'>'](...args) ? [1, 1] : [0, 0];
+    if (this.operator) return interval[this.operator](...args);
     throw ExprError.undefinedFunction(this.fn);
   }
 
@@ -189,7 +208,8 @@ export class ExprFunction extends ExprElement {
     }
 
     if (isOneOf(this.fn, '(', '[', '{')) {
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(COMMA)}</mfenced>`;
+      const join = this.fn === '(' ? COMMA : '';
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(join)}</mfenced>`;
     }
 
     if (isOneOf(this.fn, '!', '%')) {

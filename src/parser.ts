@@ -200,8 +200,9 @@ export function matchBrackets(tokens: ExprElement[], context?: {variables?: stri
       const fnName = isFn ? (term.pop() as ExprIdentifier).i : (closed![0] as ExprOperator).o;
 
       // Support multiple arguments for function calls.
-      const args = splitArray(closed!.slice(1), a => isOperator(a, ','));
+      const args = splitArray(closed!.slice(1), a => isOperator(a, ', ;'));
       term.push(new ExprFunction(fnName, args.map(prepareTerm)));
+      // TODO Tell ExprFunction how many rows/columns there are in the matrix
 
     } else if (isOperator(t, '( [ {')) {
       stack.push([t]);
