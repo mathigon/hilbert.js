@@ -201,10 +201,10 @@ export class ExprFunction extends ExprElement {
       return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
     }
 
-    if (this.fn === 'subsup') {
+    if (this.fn === 'subsup' || this.fn === 'underover') {
       const args1 = [addMRow(this.args[0], argsF[0]),
         addMRow(this.args[1], args[1]), addMRow(this.args[2], args[2])];
-      return `<msubsup>${args1.join('')}</msubsup>`;
+      return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
     }
 
     if (isOneOf(this.fn, '(', '[', '{')) {
