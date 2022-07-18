@@ -153,8 +153,8 @@ export class ExprFunction extends ExprElement {
   }
 
   toMathML(custom: MathMLMap = {}) {
-    const args = this.args.map(a => a.toMathML(custom));
-    const argsF = this.args.map((a, i) => addMFence(a, this.fn, args[i]));
+    const args = this.args.filter(a => a.toString() !== ';').map(a => a.toMathML(custom));
+    const argsF = this.args.filter(a => a.toString() !== ';').map((a, i) => addMFence(a, this.fn, args[i]));
 
     if (this.fn in custom) {
       const argsX = args.map((a, i) => ({
