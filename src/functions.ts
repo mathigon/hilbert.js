@@ -209,7 +209,8 @@ export class ExprFunction extends ExprElement {
 
     if (isOneOf(this.fn, '(', '[', '{')) {
       const join = this.fn === '(' ? COMMA : '';
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(join)}</mfenced>`;
+      const rows = this.args.filter(r => r.toString() === ';').length + 1;
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}" rows="${rows}">${argsF.join(join)}</mfenced>`;
     }
 
     if (isOneOf(this.fn, '!', '%')) {
