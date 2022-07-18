@@ -195,13 +195,14 @@ export function matchBrackets(tokens: ExprElement[], context?: {variables?: stri
       }
 
       const closed = stack.pop();
+      if (closed === undefined) continue;
       const term = last(stack);
 
       const lastTerm = last(term);
       const isFn = isOperator(t, ')') && lastTerm instanceof ExprIdentifier &&
         !safeVariables.includes(lastTerm.i);
 
-      const fnName = isFn ? (term.pop() as ExprIdentifier).i : (closed![0] as ExprOperator).o;
+      const fnName = isFn ? (term.pop() as ExprIdentifier).i : (closed[0] as ExprOperator).o;
 
       // Support multiple arguments for function calls.
       const args = splitArray(closed!.slice(1), a => isOperator(a, ', ;'));
