@@ -205,9 +205,17 @@ export function matchBrackets(tokens: ExprElement[], context?: {variables?: stri
       const fnName = isFn ? (term.pop() as ExprIdentifier).i : (closed[0] as ExprOperator).o;
 
       // Support multiple arguments for function calls.
-      const args = splitArray(closed!.slice(1), a => isOperator(a, ', ;'));
+      const withinBrackets = closed.slice(1);
+      const args = splitArray(withinBrackets, a => isOperator(a, ', ;'));
+
+      // Conditionally re-add semicolon row break markers for matrices
+      for (let i = 0; i < withinBrackets.length; i++) {
+        if (withinBrackets[i].toString() === ';' && isOperator(t, '] }')) {
+          args.splice(i - 1, 0, [withinBrackets[i]]);
+        }
+      }
+
       term.push(new ExprFunction(fnName, args.map(prepareTerm)));
-      // TODO Tell ExprFunction how many rows/columns there are in the matrix
 
     } else if (isOperator(t, '( [ {')) {
       stack.push([t]);
