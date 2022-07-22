@@ -250,6 +250,8 @@ export class ExprFunction extends ExprElement {
     // Maybe `open bracket ${joined} close bracket` ?
 
     if (this.fn === 'sqrt') return `square root of ${joined}`;
+    if (this.fn === 'root' && args[1] === '3') return `cubic root of ${args[0]}`;
+    if (this.fn === 'root' && args[1] !== '3') return `${args[1]}th root of ${[args[0]]}`;
     if (this.fn === '%') return `${joined} percent`;
     if (this.fn === '!') return `${joined} factorial`;
     if (this.fn === '/') return `${args[0]} over ${args[1]}`;

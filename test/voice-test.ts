@@ -13,6 +13,8 @@ const voice = (src: string) => Expression.parse(src).toVoice();
 
 tape('Basic Voice', (test) => {
   test.equal(voice('sqrt(5)'), 'square root of 5');
+  test.equal(voice('root(27, 3)'), 'cubic root of 27');
+  test.equal(voice('root(256, 4)'), '4th root of 256');
   test.equal(voice('a * b'), '_a_ times _b_');
   test.equal(voice('(a * b)'), '_a_ times _b_');
   test.equal(voice('a^b'), '_a_ to the power of _b_');
