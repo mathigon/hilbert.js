@@ -207,10 +207,13 @@ export class ExprFunction extends ExprElement {
       return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
     }
 
-    if (isOneOf(this.fn, '(', '[', '{')) {
-      const join = this.fn === '(' ? COMMA : '';
+    if (this.fn === '(') {
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(COMMA)}</mfenced>`;
+    }
+
+    if (isOneOf(this.fn, '[', '{')) {
       const rows = this.args.filter(r => r.toString() === ';').length + 1;
-      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}" rows="${rows}">${argsF.join(join)}</mfenced>`;
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}" rows="${rows}">${argsF.join('')}</mfenced>`;
     }
 
     if (isOneOf(this.fn, '!', '%')) {
