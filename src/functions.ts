@@ -188,7 +188,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn === 'sqrt') return `<msqrt>${argsF[0]}</msqrt>`;
 
     if (isOneOf(this.fn, '/', 'root')) {
-      // Fractions or square roots don't have brackets around their arguments
+      // Fractions or roots don't have brackets around their arguments
       const el = (this.fn === '/' ? 'mfrac' : 'mroot');
       const args1 = this.args.map((a, i) => addMRow(a, args[i]));
       return `<${el}>${args1.join('')}</${el}>`;
