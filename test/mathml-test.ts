@@ -163,7 +163,7 @@ tape('Matrices and Piecewise', (test) => {
 
 tape('Under Over', (test) => {
   test.equal(mathML('∑_(i = 0)^2 i'),
-    '<munderover><mo value="∑">∑</mo><mrow><mi>i</mi><mo value="=">=</mo><mn>0</mn>∫</mrow><mn>2</mn></munderover><mi>i</mi>');
+    '<munderover><mo value="∑">∑</mo><mrow><mi>i</mi><mo value="=">=</mo><mn>0</mn></mrow><mn>2</mn></munderover><mi>i</mi>');
   test.equal(mathML('∫_a^b c'),
     '<munderover><mo value="∫">∫</mo><mi>a</mi><mi>b</mi></munderover><mi>c</mi>');
   test.equal(mathML('∫_0^1 xdx'),
