@@ -128,8 +128,6 @@ tape('Roots', (test) => {
 tape('Groupings', (test) => {
   test.equal(mathML('(a+b)'),
     '<mfenced open="(" close=")"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
-  test.equal(mathML('{a+b}'),
-    '<mfenced open="{" close="}"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('abs(a+b)'),
     '<mfenced open="|" close="|"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
   test.equal(mathML('a,b,c'),
@@ -142,5 +140,33 @@ tape('Groupings', (test) => {
     '<msup><mi>e</mi><mrow><mo value="−">−</mo><mi>x</mi></mrow></msup>');
   test.equal(mathML('e^(i tau) = 1'),
     '<msup><mi>e</mi><mrow><mi>i</mi><mi>τ</mi></mrow></msup><mo value="=">=</mo><mn>1</mn>');
+  test.end();
+});
+
+tape('Matrices and Piecewise', (test) => {
+  test.equal(mathML('[a, b, c]'),
+    '<mfenced open="[" close="]" rows="1"><mi>a</mi><mi>b</mi><mi>c</mi></mfenced>');
+  test.equal(mathML('[a, b; c, d]'),
+    '<mfenced open="[" close="]" rows="2"><mi>a</mi><mi>b</mi><mi>c</mi><mi>d</mi></mfenced>');
+  test.equal(mathML('[a; b; c]'),
+    '<mfenced open="[" close="]" rows="3"><mi>a</mi><mi>b</mi><mi>c</mi></mfenced>');
+  test.equal(mathML('{a, b, c}'),
+    '<mfenced open="{" close="}" rows="1"><mi>a</mi><mi>b</mi><mi>c</mi></mfenced>');
+  test.equal(mathML('{a, b; c, d}'),
+    '<mfenced open="{" close="}" rows="2"><mi>a</mi><mi>b</mi><mi>c</mi><mi>d</mi></mfenced>');
+  test.equal(mathML('{a; b; c}'),
+    '<mfenced open="{" close="}" rows="3"><mi>a</mi><mi>b</mi><mi>c</mi></mfenced>');
+  test.equal(mathML('{a+b}'),
+    '<mfenced open="{" close="}" rows="1"><mi>a</mi><mo value="+">+</mo><mi>b</mi></mfenced>');
+  test.end();
+});
+
+tape('Under Over', (test) => {
+  test.equal(mathML('∑_(i = 0)^2 i'),
+    '<munderover><mo value="∑">∑</mo><mrow><mi>i</mi><mo value="=">=</mo><mn>0</mn>∫</mrow><mn>2</mn></munderover><mi>i</mi>');
+  test.equal(mathML('∫_a^b c'),
+    '<munderover><mo value="∫">∫</mo><mi>a</mi><mi>b</mi></munderover><mi>c</mi>');
+  test.equal(mathML('∫_0^1 xdx'),
+    '<munderover><mo value="∫">∫</mo><mn>0</mn><mn>1</mn></munderover><mi>xdx</mi>');
   test.end();
 });
