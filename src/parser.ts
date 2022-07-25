@@ -130,7 +130,7 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
   if (isOperator(tokens[0], fn)) throw ExprError.startOperator(tokens[0]);
   if (isOperator(last(tokens), fn)) throw ExprError.endOperator(last(tokens));
 
-  const mUnderOver = ['∑', '∏'];
+  const mUnderOver = ['∑', '∏', '∫'];
 
   for (let i = 1; i < tokens.length - 1; ++i) {
     if (!isOperator(tokens[i], fn)) continue;
