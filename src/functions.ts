@@ -263,7 +263,17 @@ export class ExprFunction extends ExprElement {
     if (this.fn === 'sub') return joined;
     if (this.fn === 'subsup') return `${args[0]} ${args[1]} ${supVoice(args[2])}`;
     if (this.fn === 'sup') return `${args[0]} ${supVoice(args[1])}`;
-
+    if (this.fn === 'underover') {
+      let symbol = '?';
+      if (args[0] === '∑') {
+        symbol = 'sum';
+      } else if (args[0] === '∫') {
+        symbol = 'integral';
+      } else if (args[0] === '∏') {
+        symbol = 'product';
+      }
+      return `${symbol} from ${args[1]} to ${args[2]} of`;
+    }
     if (VOICE_STRINGS[this.fn]) return args.join(` ${VOICE_STRINGS[this.fn]} `);
     // TODO Implement other cases
 

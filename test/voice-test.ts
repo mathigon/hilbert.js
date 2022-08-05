@@ -25,5 +25,14 @@ tape('Basic Voice', (test) => {
   test.equal(voice('a/b'), '_a_ over _b_');
   test.equal(voice('a//b'), '_a_ divided by _b_');
   test.equal(voice('(a + b)/cc'), '_a_ plus _b_ over cc');
+  test.equal(voice('∑_(i=1)^(10)'), 'sum from _i_ equals 1 to 10 of');
+  test.equal(voice('∑_(i=1)^(10)i'), 'sum from _i_ equals 1 to 10 of _i_');
+  test.equal(voice('∑_(i=1)^(10)i + 1'), 'sum from _i_ equals 1 to 10 of _i_ plus 1');
+  test.equal(voice('∏_(i=1)^(10)'), 'product from _i_ equals 1 to 10 of');
+  test.equal(voice('∏_(i=1)^(10)i'), 'product from _i_ equals 1 to 10 of _i_');
+  test.equal(voice('∏_(i=1)^(10)i + 1'), 'product from _i_ equals 1 to 10 of _i_ plus 1');
+  test.equal(voice('∫_(i=1)^(10)'), 'integral from _i_ equals 1 to 10 of');
+  test.equal(voice('∫_(i=1)^(10)i'), 'integral from _i_ equals 1 to 10 of _i_');
+  test.equal(voice('∫_(i=1)^(10)i + 1'), 'integral from _i_ equals 1 to 10 of _i_ plus 1');
   test.end();
 });
