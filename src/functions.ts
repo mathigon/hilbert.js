@@ -73,6 +73,24 @@ export class ExprFunction extends ExprElement {
     }
 
     if ('=<>'.includes(this.fn)) return evaluateRel[this.fn as '='|'<'|'>'](...args) ? 1 : 0;
+    // TODO: evaluate underover functions
+    // if (this.fn === 'underover') {
+    //   if (this.args[0].toString() === '∑') {
+    //     let sum = 0;
+    //     for (let i = args[1]; i < args[2]; i++) {
+    //       sum += i;
+    //     }
+    //     return sum;
+    //   }
+    //   if (this.args[0].toString() === '∏') {
+    //     let prod = 1;
+    //     for (let i = args[1]; i < args[2]; i++) {
+    //       prod *= i;
+    //     }
+    //     return prod;
+    //   }
+    // }
+    //
     if (this.operator) return evaluate[this.operator](...args);
     throw ExprError.undefinedFunction(this.fn);
   }
