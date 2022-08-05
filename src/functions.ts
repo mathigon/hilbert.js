@@ -171,6 +171,7 @@ export class ExprFunction extends ExprElement {
   }
 
   toMathML(custom: MathMLMap = {}) {
+    // Remove matrix/piecewise row breaks by filtering semi-colons.
     const args = this.args.filter(a => a.toString() !== ';').map(a => a.toMathML(custom));
     const argsF = this.args.filter(a => a.toString() !== ';').map((a, i) => addMFence(a, this.fn, args[i]));
 
