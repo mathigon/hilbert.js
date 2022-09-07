@@ -8,7 +8,7 @@ import {flatten, isOneOf, join, repeat, unique, words} from '@mathigon/core';
 import {evaluate, interval, Interval} from './eval';
 import {collapseTerm} from './parser';
 import {BRACKETS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
-import {CustomFunction, ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
+import {ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
 import {ExprError} from './errors';
 
 
