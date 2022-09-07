@@ -241,12 +241,28 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string, implicit
       clearBuffer();
       result.push(t);
       lastWasSymbol = false;
+    } else if (t instanceof ExprFunction && t.fn === '−') {
+      // We treat leading minuses as a special case, because they can be either multiplied (associative multiplication)
+      // or treated as subtraction (binary function).
+      if (lastWasSymbol && buffer.length) {
+        // When we have an explicit symbol (already parsed), we want to combine elements.
+        lastWasSymbol = false;
+        buffer.push(t);
+        clearBuffer();
+      } else if (buffer.length) {
+        // When we have an implicit symbol, we want to keep the minus as a unary operator.
+        // We remove previous elements from the buffer, and keep the minus as a separate token in results.
+        clearBuffer();
+        result.push(t);
+      } else {
+        // When we have no previous elements, we push the minus to the buffer to be combined with the next element.
+        buffer.push(t);
+      }
     } else {
       // If implicit=true, we allow implicit multiplication, except where the
       // second factor is a number. For example, "3 5" is invalid.
       const noImplicit = (!implicit || t instanceof ExprNumber);
-      if (buffer.length && !lastWasSymbol &&
-          noImplicit) throw ExprError.invalidExpression();
+      if (buffer.length && !lastWasSymbol && noImplicit) throw ExprError.invalidExpression();
       buffer.push(t);
       lastWasSymbol = false;
     }
