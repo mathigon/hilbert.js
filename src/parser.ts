@@ -296,6 +296,14 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
     }
   }
 
+  // Replace all operator minuses with functions. Each function takes only one argument, the next token in sequence.
+  for (let i = 0; i < tokens.length - 1; i++) {
+    // Minus, hyphen-minus, hyphen and dash are different symbols. We replace them all with same minus char.
+    if (isOperator(tokens[i], '− - ‐ –')) {
+      tokens.splice(i, 2, new ExprFunction('−', [tokens[i + 1]]));
+    }
+  }
+
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);
 
