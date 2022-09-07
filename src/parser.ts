@@ -163,6 +163,27 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
   }
 }
 
+// When all minuses have been parsed as functions (i.e. an `ExprFunction` with a single argument), we find binary
+// functions by looking for a minus function preceded by a number or variable.
+function findBinaryLeadingMinus(tokens: ExprElement[]) {
+  for (let i = 1; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token instanceof ExprFunction && token.fn === '−') {
+      // const a = tokens[i - 1] || 0; // Default previous value to 0 if no previous token.
+      const a = tokens[i - 1];
+      const b = token.args[0];
+
+      if (a instanceof ExprOperator) {
+        throw ExprError.consecutiveOperators(a.o, token.fn);
+      }
+
+      const args = [removeBrackets(a), removeBrackets(b)];
+      tokens.splice(i - 1, 2, new ExprFunction('−', args));
+      i -= 1;
+    }
+  }
+}
+
 
 // -----------------------------------------------------------------------------
 // Match Brackets
@@ -272,6 +293,8 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string, implicit
   return result;
 }
 
+/* Reduces an array of tokens into a single nested expression.
+ * For example, [2, +, 3] becomes a new ExprFunction('+', argument = [2, 3]). */
 export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Filter out whitespace.
   tokens = tokens.filter(t => !(t instanceof ExprSpace));
@@ -323,11 +346,8 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);
 
-  // Match - and ± operators, including a unary -/± at the start of an expression.
-  if (isOperator(tokens[0], '− ±')) {
-    tokens.splice(0, 2, new ExprFunction((tokens[0] as ExprOperator).o, [tokens[1]]));
-  }
-  findBinaryFunction(tokens, '− ±');
+  // Match - operators, nested within the replaced minus functions.
+  findBinaryLeadingMinus(tokens);
 
   // Match + operators.
   if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
