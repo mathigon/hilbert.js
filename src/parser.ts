@@ -169,7 +169,6 @@ function findBinaryLeadingMinus(tokens: ExprElement[]) {
   for (let i = 1; i < tokens.length; i++) {
     const token = tokens[i];
     if (token instanceof ExprFunction && token.fn === '−') {
-      // const a = tokens[i - 1] || 0; // Default previous value to 0 if no previous token.
       const a = tokens[i - 1];
       const b = token.args[0];
 
