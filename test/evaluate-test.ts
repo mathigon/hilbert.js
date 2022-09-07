@@ -34,6 +34,8 @@ tape('Functions', (test) => {
 tape('Order and Brackets', (test) => {
   test.equal(value('2 a b', {a: 3, b: 5}), 30);
   test.equal(value('2 +  3  + 5'), 10);
+  test.equal(value('2 - 3 - 5'), -6);
+  test.equal(value('-2 - 3 - 5'), -10);
   test.equal(value('2 + 3 * 5'), 17);
   test.equal(value('2 * 3 - 5'), 1);
   test.equal(value('2 * (5 - 3)'), 4);
@@ -41,6 +43,7 @@ tape('Order and Brackets', (test) => {
   test.equal(value('2 * (5 - 8 / 2)'), 2);
   test.equal(value('+ 2 + 3'), 5);
   test.equal(value('- 2 * 3'), -6);
+  test.equal(value('3 * - 2'), -6);
   test.end();
 });
 

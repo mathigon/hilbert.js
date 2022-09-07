@@ -59,8 +59,6 @@ tape('Comparison Operators', (test) => {
 });
 
 tape('Unary Minus', (test) => {
-  test.throws(() => expr('1 * -1').collapse());
-  test.throws(() => expr('1 + -1').collapse());
   test.doesNotThrow(() => expr('x = -1').collapse());
   test.end();
 });
@@ -93,7 +91,6 @@ tape('brackets', (test) => {
 
 tape('errors', (test) => {
   test.throws(() => expr('a + + b').collapse());
-  test.throws(() => expr('a * - b').collapse());
   test.throws(() => expr('a + (a +)').collapse());
   test.throws(() => expr('a + (*)').collapse());
   test.throws(() => expr('(+) - a').collapse());
