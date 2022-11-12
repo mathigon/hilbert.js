@@ -310,9 +310,9 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   }
 
   // Match percentage and factorial operators.
-  if (isOperator(tokens[0], '%!')) throw ExprError.startOperator(tokens[0]);
+  if (isOperator(tokens[0], '% !')) throw ExprError.startOperator(tokens[0]);
   for (let i = 0; i < tokens.length; ++i) {
-    if (!isOperator(tokens[i], '%!')) continue;
+    if (!isOperator(tokens[i], '% !')) continue;
     tokens.splice(i - 1, 2, new ExprFunction((tokens[i] as ExprOperator).o, [tokens[i - 1]]));
     i -= 1;
   }
