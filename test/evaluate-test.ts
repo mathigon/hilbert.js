@@ -43,7 +43,20 @@ tape('Order and Brackets', (test) => {
   test.equal(value('2 * (5 - 8 / 2)'), 2);
   test.equal(value('+ 2 + 3'), 5);
   test.equal(value('- 2 * 3'), -6);
+  test.equal(value('- - 2'), 2);
   test.equal(value('3 * - 2'), -6);
+  test.equal(value('3 + - 2'), 1);
+  test.equal(value('-3 + - 2'), -5);
+  test.equal(value('3 - - 2'), 5);
+  test.equal(value('3 - - - 2'), 1);
+  test.equal(value('3 - - - 2 * 4'), -5);
+  test.equal(value('3 - - (- 2 * 4)'), -5);
+  test.equal(value('3 - - -(2 * 4)'), -5);
+  test.equal(value('+ 3 - - - 2'), 1);
+  test.equal(value('3 - - - 2 + 5'), 6);
+  test.equal(value('3 - - - (2 + 5)'), -4);
+  test.equal(value('3 - - - 2 + 5 - 3'), 3);
+  test.equal(value('3 - - - 2 + 5 * 3'), 16);
   test.end();
 });
 
