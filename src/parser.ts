@@ -163,18 +163,14 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
   }
 }
 
-// When all minuses have been parsed as functions (i.e. an `ExprFunction` with a single argument), we find binary
-// functions by looking for a minus function preceded by a number or variable.
-function findBinaryLeadingMinus(tokens: ExprElement[]) {
+// Some minuses have been parsed as functions (i.e. an `ExprFunction` with a single argument).
+// If they are preceded by something, we need to treat the expression as a unary minus.
+function findBinaryMinusFunctions(tokens: ExprElement[]) {
   for (let i = 1; i < tokens.length; i++) {
     const token = tokens[i];
     if (token instanceof ExprFunction && token.fn === '−') {
       const a = tokens[i - 1];
       const b = token.args[0];
-
-      if (a instanceof ExprOperator) {
-        throw ExprError.consecutiveOperators(a.o, token.fn);
-      }
 
       const args = [removeBrackets(a), removeBrackets(b)];
       tokens.splice(i - 1, 2, new ExprFunction('−', args));
@@ -334,10 +330,15 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
     }
   }
 
-  // Replace all operator minuses with functions. Each function takes only one argument, the next token in sequence.
-  for (let i = 0; i < tokens.length - 1; i++) {
+  // Replace all operator minuses, not preceded by numbers, with functions. Each function takes only one argument,
+  // the next token in sequence.
+  // Move backwards to correctly handle nested expressions. For example, " - - a" should be parsed as function "−" with
+  // argument [function "-" with argument ["a"]].
+  for (let i = tokens.length - 1; i >= 0; i--) {
     // Treat ± as a minus.
     if (isOperator(tokens[i], '− ±')) {
+      if (tokens[i - 1] instanceof ExprNumber) continue;
+
       tokens.splice(i, 2, new ExprFunction('−', [tokens[i + 1]]));
     }
   }
@@ -345,12 +346,13 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);
 
-  // Match - operators, nested within the replaced minus functions.
-  findBinaryLeadingMinus(tokens);
+  findBinaryFunction(tokens, '- −');
 
   // Match + operators.
   if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
   tokens = findAssociativeFunction(tokens, '+');
+
+  findBinaryMinusFunctions(tokens);
 
   if (tokens.length > 1) throw ExprError.invalidExpression();
   return tokens[0];
