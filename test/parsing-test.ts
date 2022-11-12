@@ -136,4 +136,5 @@ tape('Minus operators', (test) => {
   test.equal(expr('-(a + b)').collapse().toString(), '−(a + b)');
   test.equal(expr('a - - - b').collapse().toString(), 'a − (−(−b))');
   test.equal(expr('- - - b').collapse().toString(), '−(−(−b))');
+  test.end();
 });
