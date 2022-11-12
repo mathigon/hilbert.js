@@ -125,3 +125,13 @@ tape('mixed numbers', (test) => {
   test.throws(() => expr('1/2 1/2').collapse());
   test.end();
 });
+
+tape('Minus operators', (test) => {
+  test.equal(expr('a * - b').collapse().toString(), 'a × (−b)');
+  test.equal(expr('a + - b').collapse().toString(), 'a + (−b)');
+  test.equal(expr('a - - b').collapse().toString(), 'a − (−b)');
+  test.equal(expr('10% - b').collapse().toString(), '10% − b');
+  test.equal(expr('-(a + b)').collapse().toString(), '−(a + b)');
+  test.equal(expr('a - - - b').collapse().toString(), 'a − (−(−b))');
+  test.equal(expr('- - - b').collapse().toString(), '−(−(−b))');
+});
