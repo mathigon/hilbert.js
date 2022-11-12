@@ -97,6 +97,8 @@ tape('errors', (test) => {
   test.throws(() => expr('2 =').collapse());
   test.throws(() => expr('2 = 1 =').collapse());
   test.throws(() => expr('< 1').collapse());
+  test.throws(() => expr('!2').collapse());
+  test.throws(() => expr('%2').collapse());
   test.end();
 });
 
