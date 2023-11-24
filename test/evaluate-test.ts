@@ -27,6 +27,8 @@ tape('Functions', (test) => {
   test.equal(value('2 ^ 3'), 8);
   test.equal(value('4 / 2'), 2);
   test.equal(value('sqrt(81)'), 9);
+  test.equal(value('root(27, 3)'), 3);
+  test.equal(value('root(81, 4)'), 3);
   test.equal(Math.round(value('sin(pi)')), 0);
   test.end();
 });

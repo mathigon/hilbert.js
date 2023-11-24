@@ -130,6 +130,8 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
   if (isOperator(tokens[0], fn)) throw ExprError.startOperator(tokens[0]);
   if (isOperator(last(tokens), fn)) throw ExprError.endOperator(last(tokens));
 
+  const mUnderOver = ['∑', '∏', '∫'];
+
   for (let i = 1; i < tokens.length - 1; ++i) {
     if (!isOperator(tokens[i], fn)) continue;
     const token = tokens[i] as ExprOperator;
@@ -137,7 +139,8 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
     const a = tokens[i - 1];
     const b = tokens[i + 1];
 
-    if (a instanceof ExprOperator) {
+    // Sigma is ExprOperator, next to '_' also an operator
+    if (a instanceof ExprOperator && !mUnderOver.includes(a.o)) {
       throw ExprError.consecutiveOperators(a.o, token.o);
     }
     if (b instanceof ExprOperator) {
@@ -151,7 +154,8 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
       if (c instanceof ExprOperator) throw ExprError.consecutiveOperators(token2.o, c.o);
       const args = [removeBrackets(a), removeBrackets(b), removeBrackets(c)];
       if (token.o === '^') [args[1], args[2]] = [args[2], args[1]];
-      tokens.splice(i - 1, 5, new ExprFunction('subsup', args));
+      const mathMLFn = mUnderOver.includes(a.toString()) ? 'underover' : 'subsup';
+      tokens.splice(i - 1, 5, new ExprFunction(mathMLFn, args));
       i -= 4;
 
     } else {
@@ -191,16 +195,26 @@ export function matchBrackets(tokens: ExprElement[], context?: {variables?: stri
       }
 
       const closed = stack.pop();
+      if (closed === undefined) continue;
       const term = last(stack);
 
       const lastTerm = last(term);
       const isFn = isOperator(t, ')') && lastTerm instanceof ExprIdentifier &&
         !safeVariables.includes(lastTerm.i);
 
-      const fnName = isFn ? (term.pop() as ExprIdentifier).i : (closed![0] as ExprOperator).o;
+      const fnName = isFn ? (term.pop() as ExprIdentifier).i : (closed[0] as ExprOperator).o;
 
       // Support multiple arguments for function calls.
-      const args = splitArray(closed!.slice(1), a => isOperator(a, ','));
+      const withinBrackets = closed.slice(1);
+      const args = splitArray(withinBrackets, a => isOperator(a, ', ;'));
+
+      // Conditionally re-add semicolon row break markers for matrices
+      for (let i = 0; i < withinBrackets.length; i++) {
+        if (withinBrackets[i].toString() === ';' && isOperator(t, '] }')) {
+          args.splice(i - 1, 0, [withinBrackets[i]]);
+        }
+      }
+
       term.push(new ExprFunction(fnName, args.map(prepareTerm)));
 
     } else if (isOperator(t, '( [ {')) {

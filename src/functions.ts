@@ -5,10 +5,10 @@
 
 
 import {flatten, isOneOf, join, repeat, unique, words} from '@mathigon/core';
-import {evaluate, interval, Interval} from './eval';
+import {evaluate, evaluateRel, interval, Interval, intervalRel} from './eval';
 import {collapseTerm} from './parser';
-import {BRACKETS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
-import {CustomFunction, ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
+import {BRACKETS, escape, isSpecialFunction, SpecialFunction, VOICE_STRINGS} from './symbols';
+import {ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
 import {ExprError} from './errors';
 
 
@@ -40,12 +40,29 @@ function supVoice(a: string) {
 
 
 export class ExprFunction extends ExprElement {
+  private operator?: 'add'|'sub'|'mul'|'div'|'sup'|SpecialFunction;
 
   constructor(readonly fn: string, readonly args: ExprElement[] = []) {
     super();
+    this.operator = fn === '+' ? 'add' : fn === '−' ? 'sub' :
+      '*·×'.includes(fn) ? 'mul' : fn === '/' ? 'div' : fn === 'sup' ? 'sup' :
+        isSpecialFunction(fn) ? fn : undefined;
   }
 
   evaluate(vars: VarMap = {}) {
+    if (this.fn === '{') {
+      // Piecewise functions
+      for (let i = 0; i < this.args.length; i += 1) {
+        if (this.args[i + 1].evaluate(vars)) return this.args[i].evaluate();
+      }
+      return NaN;
+    } else if (this.fn === '(') {
+      return this.args[0].evaluate(vars);
+    } else if (this.fn === '[') {
+      // TODO Evaluate matrices
+      return NaN;
+    }
+
     const args = this.args.map(a => a.evaluate(vars));
 
     if (this.fn in vars) {
@@ -55,17 +72,42 @@ export class ExprFunction extends ExprElement {
       throw ExprError.uncallableExpression(this.fn);
     }
 
-    if (this.fn === '+') return evaluate.add(...args);
-    if (this.fn === '−') return evaluate.sub(...args);
-    if (['*', '·', '×'].includes(this.fn)) return evaluate.mul(...args);
-    if (this.fn === '/') return evaluate.div(...args);
-    if (this.fn === 'sup') return evaluate.sup(...args);
-    if (isSpecialFunction(this.fn)) return evaluate[this.fn](...args);
-    if (this.fn === '(') return args[0];
+    if ('=<>'.includes(this.fn)) return evaluateRel[this.fn as '='|'<'|'>'](...args) ? 1 : 0;
+    // TODO: evaluate underover functions
+    // if (this.fn === 'underover') {
+    //   if (this.args[0].toString() === '∑') {
+    //     let sum = 0;
+    //     for (let i = args[1]; i < args[2]; i++) {
+    //       sum += i;
+    //     }
+    //     return sum;
+    //   }
+    //   if (this.args[0].toString() === '∏') {
+    //     let prod = 1;
+    //     for (let i = args[1]; i < args[2]; i++) {
+    //       prod *= i;
+    //     }
+    //     return prod;
+    //   }
+    // }
+    //
+    if (this.operator) return evaluate[this.operator](...args);
     throw ExprError.undefinedFunction(this.fn);
   }
 
   interval(vars: VarMap = {}): Interval {
+    if (this.fn === '{') {
+      for (let i = 0; i < this.args.length; i += 1) {
+        if (this.args[i + 1].interval(vars)[0]) return this.args[i].interval(vars);
+      }
+      return [NaN, NaN];
+    } else if (this.fn === '(') {
+      return this.args[0].interval(vars);
+    } else if (this.fn === '[') {
+      // TODO Evaluate matrices
+      return [NaN, NaN];
+    }
+
     const args = this.args.map(a => a.interval(vars));
 
     if (this.fn in vars) {
@@ -76,13 +118,8 @@ export class ExprFunction extends ExprElement {
       throw ExprError.uncallableExpression(this.fn);
     }
 
-    if (this.fn === '+') return interval.add(...args);
-    if (this.fn === '−') return interval.sub(...args);
-    if (['*', '·', '×'].includes(this.fn)) return interval.mul(...args);
-    if (this.fn === '/') return interval.div(...args);
-    if (this.fn === 'sup') return interval.sup(...args);
-    if (isSpecialFunction(this.fn)) return interval[this.fn](...args);
-    if (this.fn === '(') return args[0];
+    if ('=<>'.includes(this.fn)) return intervalRel[this.fn as '='|'<'|'>'](...args) ? [1, 1] : [0, 0];
+    if (this.operator) return interval[this.operator](...args);
     throw ExprError.undefinedFunction(this.fn);
   }
 
@@ -134,8 +171,9 @@ export class ExprFunction extends ExprElement {
   }
 
   toMathML(custom: MathMLMap = {}) {
-    const args = this.args.map(a => a.toMathML(custom));
-    const argsF = this.args.map((a, i) => addMFence(a, this.fn, args[i]));
+    // Remove matrix/piecewise row breaks by filtering semi-colons.
+    const args = this.args.filter(a => a.toString() !== ';').map(a => a.toMathML(custom));
+    const argsF = this.args.filter(a => a.toString() !== ';').map((a, i) => addMFence(a, this.fn, args[i]));
 
     if (this.fn in custom) {
       const argsX = args.map((a, i) => ({
@@ -169,7 +207,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn === 'sqrt') return `<msqrt>${argsF[0]}</msqrt>`;
 
     if (isOneOf(this.fn, '/', 'root')) {
-      // Fractions or square roots don't have brackets around their arguments
+      // Fractions or roots don't have brackets around their arguments
       const el = (this.fn === '/' ? 'mfrac' : 'mroot');
       const args1 = this.args.map((a, i) => addMRow(a, args[i]));
       return `<${el}>${args1.join('')}</${el}>`;
@@ -182,14 +220,19 @@ export class ExprFunction extends ExprElement {
       return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
     }
 
-    if (this.fn === 'subsup') {
+    if (this.fn === 'subsup' || this.fn === 'underover') {
       const args1 = [addMRow(this.args[0], argsF[0]),
         addMRow(this.args[1], args[1]), addMRow(this.args[2], args[2])];
-      return `<msubsup>${args1.join('')}</msubsup>`;
+      return `<m${this.fn}>${args1.join('')}</m${this.fn}>`;
     }
 
-    if (isOneOf(this.fn, '(', '[', '{')) {
+    if (this.fn === '(') {
       return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}">${argsF.join(COMMA)}</mfenced>`;
+    }
+
+    if (isOneOf(this.fn, '[', '{')) {
+      const rows = this.args.filter(r => r.toString() === ';').length + 1;
+      return `<mfenced open="${this.fn}" close="${BRACKETS[this.fn]}" rows="${rows}">${argsF.join('')}</mfenced>`;
     }
 
     if (isOneOf(this.fn, '!', '%')) {
@@ -229,6 +272,8 @@ export class ExprFunction extends ExprElement {
     // Maybe `open bracket ${joined} close bracket` ?
 
     if (this.fn === 'sqrt') return `square root of ${joined}`;
+    if (this.fn === 'root' && args[1] === '3') return `cubic root of ${args[0]}`;
+    if (this.fn === 'root' && args[1] !== '3') return `${args[1]}th root of ${[args[0]]}`;
     if (this.fn === '%') return `${joined} percent`;
     if (this.fn === '!') return `${joined} factorial`;
     if (this.fn === '/') return `${args[0]} over ${args[1]}`;
@@ -237,7 +282,17 @@ export class ExprFunction extends ExprElement {
     if (this.fn === 'sub') return joined;
     if (this.fn === 'subsup') return `${args[0]} ${args[1]} ${supVoice(args[2])}`;
     if (this.fn === 'sup') return `${args[0]} ${supVoice(args[1])}`;
-
+    if (this.fn === 'underover') {
+      let symbol = '?';
+      if (args[0] === '∑') {
+        symbol = 'sum';
+      } else if (args[0] === '∫') {
+        symbol = 'integral';
+      } else if (args[0] === '∏') {
+        symbol = 'product';
+      }
+      return `${symbol} from ${args[1]} to ${args[2]} of`;
+    }
     if (VOICE_STRINGS[this.fn]) return args.join(` ${VOICE_STRINGS[this.fn]} `);
     // TODO Implement other cases
 
