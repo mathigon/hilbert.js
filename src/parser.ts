@@ -163,8 +163,10 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
   }
 }
 
-// Some minuses have been parsed as functions (i.e. an `ExprFunction` with a single argument).
-// If they are preceded by something, we need to treat the expression as a unary minus.
+// Some minuses are initially parsed as unary functions (i.e. the string "- b" is parsed an `ExprFunction` with
+// `.fn` = "−" and an `ExprIdentifier` "b" as its single argument.)
+// If any unary minus function is preceded by another token, we need to merge the pair of tokens into a binary minus
+// function.
 function findBinaryMinusFunctions(tokens: ExprElement[]) {
   for (let i = 1; i < tokens.length; i++) {
     const token = tokens[i];
