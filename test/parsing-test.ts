@@ -128,7 +128,7 @@ tape('mixed numbers', (test) => {
   test.end();
 });
 
-tape('Minus operators', (test) => {
+tape('Subtraction operators', (test) => {
   test.equal(expr('a * - b').collapse().toString(), 'a × (−b)');
   test.equal(expr('a + - b').collapse().toString(), 'a + (−b)');
   test.equal(expr('a - - b').collapse().toString(), 'a − (−b)');

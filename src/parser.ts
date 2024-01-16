@@ -163,19 +163,49 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
   }
 }
 
-// Some minuses are initially parsed as unary functions (i.e. the string "- b" is parsed an `ExprFunction` with
-// `.fn` = "−" and an `ExprIdentifier` "b" as its single argument.)
-// If any unary minus function is preceded by another token, we need to merge the pair of tokens into a binary minus
-// function.
-function findBinaryMinusFunctions(tokens: ExprElement[]) {
+
+/**
+ * Merge any tokens with a subtraction into a single term. Subtraction can be in the form of ['a', '-', 'b'], where the
+ * token is an operator. Alternatively, due to previously parsing unary minus, it can be in the form of ['a', {function
+ * "-" args: "b"}]. This function merges both cases into a single term.
+ * */
+function findBinarySubtractionFunctions(tokens: ExprElement[]) {
   for (let i = 1; i < tokens.length; i++) {
     const token = tokens[i];
-    if (token instanceof ExprFunction && token.fn === '−') {
+
+    // This is the case when we have something like ["a", "-", "b"].
+    if (isOperator(token, '- −')) {
+      const a = tokens[i - 1];
+      const b = tokens[i + 1];
+
+      if (a instanceof ExprOperator) {
+        throw ExprError.consecutiveOperators(a.o, token.o);
+      }
+      if (b instanceof ExprOperator) {
+        throw ExprError.consecutiveOperators(token.o, b.o);
+      }
+
+      const args = [removeBrackets(a), removeBrackets(b)];
+      tokens.splice(i - 1, 3, new ExprFunction('−', args));
+      i -= 2;
+    }
+
+    // This is the case when have already parsed subtraction ExprFunctions somewhere in the expression, not preceded by
+    // a number. For example, we may have something like [ExprIdentifier: 'x', {function '-' args: 'b'}] or ['a', '+',
+    // {function: '-', args: ['b']}].
+    if (token instanceof ExprFunction && token.fn === '−' && token.args.length === 1) {
       const a = tokens[i - 1];
       const b = token.args[0];
 
       const args = [removeBrackets(a), removeBrackets(b)];
-      tokens.splice(i - 1, 2, new ExprFunction('−', args));
+      if (a instanceof ExprOperator) {
+        // This can happen if we have a '+' before a '-'. Here, we have something like ['a', '+', {function '-' args:
+        // 'b'}]. In this case, we merge to something of the form ['a', {function '+' args: [{function '-',
+        // args['b']}]}].
+        tokens.splice(i - 1, 2, new ExprFunction(a.o, [token]));
+      } else {
+        tokens.splice(i - 1, 2, new ExprFunction('−', args));
+      }
       i -= 1;
     }
   }
@@ -340,7 +370,6 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
     // Treat ± as a minus.
     if (isOperator(tokens[i], '− ±')) {
       if (tokens[i - 1] instanceof ExprNumber) continue;
-
       tokens.splice(i, 2, new ExprFunction('−', [tokens[i + 1]]));
     }
   }
@@ -348,13 +377,11 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);
 
-  findBinaryFunction(tokens, '- −');
+  findBinarySubtractionFunctions(tokens);
 
   // Match + operators.
   if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
-  tokens = findAssociativeFunction(tokens, '+');
-
-  findBinaryMinusFunctions(tokens);
+  tokens = findAssociativeFunction(tokens, '+', true);
 
   if (tokens.length > 1) throw ExprError.invalidExpression();
   return tokens[0];
