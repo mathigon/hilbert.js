@@ -165,15 +165,15 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
 
 
 /**
- * Merge any tokens with a subtraction into a single term. Subtraction can be in the form of ['a', '-', 'b'], where the
+ * Merge any tokens with a subtraction into a single term. Subtraction can be in the form of ['3', '-', '2'], where the
  * token is an operator. Alternatively, due to previously parsing unary minus, it can be in the form of ['a', {function
- * "-" args: "b"}]. This function merges both cases into a single term.
+ * '-' args: 'b'}]. This function merges both cases into a single term.
  * */
 function findBinarySubtractionFunctions(tokens: ExprElement[]) {
   for (let i = 1; i < tokens.length; i++) {
     const token = tokens[i];
 
-    // This is the case when we have something like ["a", "-", "b"].
+    // This is the case when we have something like ['3', '-', '2'].
     if (isOperator(token, '- −')) {
       const a = tokens[i - 1];
       const b = tokens[i + 1];
