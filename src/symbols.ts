@@ -39,6 +39,7 @@ export const SPECIAL_OPERATORS: Obj<string> = {
   '\'': '’',
 
   '!=': '≠',
+  '?=': '≟',
   '<=': '≤',
   '>=': '≥',
   'in': '∈',
@@ -112,7 +113,7 @@ const UPPERCASE = ALPHABET.toUpperCase().split('');
 const GREEK = Object.values(SPECIAL_IDENTIFIERS);
 export const IDENTIFIER_SYMBOLS = [...LOWERCASE, ...UPPERCASE, ...GREEK, '$'];
 
-const SIMPLE_SYMBOLS = '|()[]{}÷,!<>=*/+-–−~^_…°•∥⊥\'∠:%∼△';
+const SIMPLE_SYMBOLS = '|()[]{}÷,!?<>=*/+-–−~^_…°•∥⊥\'∠:%∼△';
 const COMPLEX_SYMBOLS = Object.values(SPECIAL_OPERATORS);
 export const OPERATOR_SYMBOLS = [...SIMPLE_SYMBOLS, ...COMPLEX_SYMBOLS];
 
@@ -154,6 +155,7 @@ export const VOICE_STRINGS: Obj<string> = {
   '±': 'plus-minus',
   '=': 'equals',
   '≠': 'does not equal',
+  '≟': 'is it equal?',
   '<': 'is less than',
   '>': 'is greater than',
   '≤': 'is less than or equal to',

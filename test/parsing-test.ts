@@ -73,6 +73,7 @@ tape('symbols', (test) => {
   test.equal(str('x cup y'), 'x ∪ y');
   test.equal(str('x ∩ y'), 'x ∩ y');
   test.equal(str('a != b'), 'a ≠ b');
+  test.equal(str('a ?= b'), 'a ≟ b');
   test.end();
 });
 

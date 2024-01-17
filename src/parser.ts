@@ -262,7 +262,7 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   if (!tokens.length) throw ExprError.invalidExpression();
 
   // Match comparison operators first
-  const comp = tokens.findIndex(t => isOperator(t, '= < > ≤ ≥'));
+  const comp = tokens.findIndex(t => isOperator(t, '= < > ≤ ≥ ≟ ≠'));
   if (comp === 0) throw ExprError.startOperator(tokens[0]);
   if (comp === tokens.length - 1) throw ExprError.endOperator(tokens[0]);
   if (comp > 0) {

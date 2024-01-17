@@ -8,7 +8,7 @@ import {flatten, isOneOf, join, repeat, unique, words} from '@mathigon/core';
 import {evaluate, interval, Interval} from './eval';
 import {collapseTerm} from './parser';
 import {BRACKETS, escape, isSpecialFunction, VOICE_STRINGS} from './symbols';
-import {CustomFunction, ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
+import {ExprElement, ExprMap, ExprNumber, MathMLMap, VarMap} from './elements';
 import {ExprError} from './errors';
 
 
@@ -119,7 +119,7 @@ export class ExprFunction extends ExprElement {
     if (this.fn === 'sub') return args.join('_');
     if (this.fn === 'subsup') return `${args[0]}_${args[1]}^${args[2]}`;
 
-    if (words('+ * × · / = < > ≤ ≥ ≈').includes(this.fn)) {
+    if (words('+ * × · / = < > ≤ ≥ ≈ ≟ ≠').includes(this.fn)) {
       return args.join(` ${this.fn} `);
     }
 
@@ -149,7 +149,7 @@ export class ExprFunction extends ExprElement {
       return argsF.length > 1 ? argsF.join('<mo value="−">−</mo>') : `<mo rspace="0" value="−">−</mo>${argsF[0]}`;
     }
 
-    if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥', '≈')) {
+    if (isOneOf(this.fn, '+', '=', '<', '>', '≤', '≥', '≈', '≟', '≠')) {
       const fn = escape(this.fn);
       return argsF.join(`<mo value="${fn}">${fn}</mo>`);
     }
