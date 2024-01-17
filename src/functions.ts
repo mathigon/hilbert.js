@@ -19,6 +19,7 @@ const COMMA = '<mo value="," lspace="0">,</mo>';
 function needsBrackets(expr: ExprElement, parentFn: string): boolean {
   if (!PRECEDENCE.includes(parentFn)) return false;
   if (expr instanceof ExprTerm) return true;
+  if (expr instanceof ExprFunction && expr.fn === '−') return true;
   if (!(expr instanceof ExprFunction)) return false;
   if (!PRECEDENCE.includes(expr.fn)) return false;
   if (SUBSUP.includes(expr.fn) && SUBSUP.includes(parentFn)) return true;
