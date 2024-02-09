@@ -50,7 +50,8 @@ export abstract class ExprElement {
    */
   recursiveSubstitute(vars: ExprMap): ExprElement {
     const varList = Object.keys(vars);
-    if (!this.unknowns.filter(v => varList.includes(v)).length) return this;
+    const unknown = [...this.unknowns, ...this.functions];
+    if (!unknown.filter(v => varList.includes(v)).length) return this;
     return this.substitute(vars).recursiveSubstitute(vars);
   }
 
