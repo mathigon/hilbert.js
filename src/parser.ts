@@ -164,6 +164,54 @@ function findBinaryFunction(tokens: ExprElement[], fn: string) {
 }
 
 
+/**
+ * Merge any tokens with a subtraction into a single term. Subtraction can be in the form of ['3', '-', '2'], where the
+ * token is an operator. Alternatively, due to previously parsing unary minus, it can be in the form of ['a', {function
+ * '-' args: 'b'}]. This function merges both cases into a single term.
+ * */
+function findBinarySubtractionFunctions(tokens: ExprElement[]) {
+  for (let i = 1; i < tokens.length; i++) {
+    const token = tokens[i];
+
+    // This is the case when we have something like ['3', '-', '2'].
+    if (isOperator(token, '- −')) {
+      const a = tokens[i - 1];
+      const b = tokens[i + 1];
+
+      if (a instanceof ExprOperator) {
+        throw ExprError.consecutiveOperators(a.o, token.o);
+      }
+      if (b instanceof ExprOperator) {
+        throw ExprError.consecutiveOperators(token.o, b.o);
+      }
+
+      const args = [removeBrackets(a), removeBrackets(b)];
+      tokens.splice(i - 1, 3, new ExprFunction('−', args));
+      i -= 2;
+    }
+
+    // This is the case when have already parsed subtraction ExprFunctions somewhere in the expression, not preceded by
+    // a number. For example, we may have something like [ExprIdentifier: 'x', {function '-' args: 'b'}] or ['a', '+',
+    // {function: '-', args: ['b']}].
+    if (token instanceof ExprFunction && token.fn === '−' && token.args.length === 1) {
+      const a = tokens[i - 1];
+      const b = token.args[0];
+
+      const args = [removeBrackets(a), removeBrackets(b)];
+      if (a instanceof ExprOperator) {
+        // This can happen if we have a '+' before a '-'. Here, we have something like ['a', '+', {function '-' args:
+        // 'b'}]. In this case, we merge to something of the form ['a', {function '+' args: [{function '-',
+        // args['b']}]}].
+        tokens.splice(i - 1, 2, new ExprFunction(a.o, [token]));
+      } else {
+        tokens.splice(i - 1, 2, new ExprFunction('−', args));
+      }
+      i -= 1;
+    }
+  }
+}
+
+
 // -----------------------------------------------------------------------------
 // Match Brackets
 
@@ -241,12 +289,28 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string, implicit
       clearBuffer();
       result.push(t);
       lastWasSymbol = false;
+    } else if (t instanceof ExprFunction && t.fn === '−') {
+      // We treat leading minuses as a special case, because they can be either multiplied (associative multiplication)
+      // or treated as subtraction (binary function).
+      if (lastWasSymbol && buffer.length) {
+        // When we have an explicit symbol (already parsed), we want to combine elements.
+        lastWasSymbol = false;
+        buffer.push(t);
+        clearBuffer();
+      } else if (buffer.length) {
+        // When we have an implicit symbol, we want to keep the minus as a unary operator.
+        // We remove previous elements from the buffer, and keep the minus as a separate token in results.
+        clearBuffer();
+        result.push(t);
+      } else {
+        // When we have no previous elements, we push the minus to the buffer to be combined with the next element.
+        buffer.push(t);
+      }
     } else {
       // If implicit=true, we allow implicit multiplication, except where the
       // second factor is a number. For example, "3 5" is invalid.
       const noImplicit = (!implicit || t instanceof ExprNumber);
-      if (buffer.length && !lastWasSymbol &&
-          noImplicit) throw ExprError.invalidExpression();
+      if (buffer.length && !lastWasSymbol && noImplicit) throw ExprError.invalidExpression();
       buffer.push(t);
       lastWasSymbol = false;
     }
@@ -256,6 +320,8 @@ function findAssociativeFunction(tokens: ExprElement[], symbol: string, implicit
   return result;
 }
 
+/* Reduces an array of tokens into a single nested expression.
+ * For example, [2, +, 3] becomes a new ExprFunction('+', argument = [2, 3]). */
 export function collapseTerm(tokens: ExprElement[]): ExprElement {
   // Filter out whitespace.
   tokens = tokens.filter(t => !(t instanceof ExprSpace));
@@ -272,9 +338,9 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
   }
 
   // Match percentage and factorial operators.
-  if (isOperator(tokens[0], '%!')) throw ExprError.startOperator(tokens[0]);
+  if (isOperator(tokens[0], '% !')) throw ExprError.startOperator(tokens[0]);
   for (let i = 0; i < tokens.length; ++i) {
-    if (!isOperator(tokens[i], '%!')) continue;
+    if (!isOperator(tokens[i], '% !')) continue;
     tokens.splice(i - 1, 2, new ExprFunction((tokens[i] as ExprOperator).o, [tokens[i - 1]]));
     i -= 1;
   }
@@ -296,18 +362,26 @@ export function collapseTerm(tokens: ExprElement[]): ExprElement {
     }
   }
 
+  // Replace all operator minuses, not preceded by numbers, with functions. Each function takes only one argument,
+  // the next token in sequence.
+  // Move backwards to correctly handle nested expressions. For example, " - - a" should be parsed as function "−" with
+  // argument [function "-" with argument ["a"]].
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    // Treat ± as a minus.
+    if (isOperator(tokens[i], '− ±')) {
+      if (tokens[i - 1] instanceof ExprNumber) continue;
+      tokens.splice(i, 2, new ExprFunction('−', [tokens[i + 1]]));
+    }
+  }
+
   // Match multiplication operators.
   tokens = findAssociativeFunction(tokens, '× * ·', true);
 
-  // Match - and ± operators, including a unary -/± at the start of an expression.
-  if (isOperator(tokens[0], '− ±')) {
-    tokens.splice(0, 2, new ExprFunction((tokens[0] as ExprOperator).o, [tokens[1]]));
-  }
-  findBinaryFunction(tokens, '− ±');
+  findBinarySubtractionFunctions(tokens);
 
   // Match + operators.
   if (isOperator(tokens[0], '+')) tokens = tokens.slice(1);
-  tokens = findAssociativeFunction(tokens, '+');
+  tokens = findAssociativeFunction(tokens, '+', true);
 
   if (tokens.length > 1) throw ExprError.invalidExpression();
   return tokens[0];
