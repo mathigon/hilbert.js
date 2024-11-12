@@ -8,8 +8,7 @@ import {total} from '@mathigon/core';
 import {gcd, isBetween, lcm} from '@mathigon/fermat';
 import {SpecialFunction} from './symbols';
 
-const OPERATORS = ['add', 'sub', 'mul', 'div', 'sup'] as const;
-type Functions = typeof OPERATORS[number] | SpecialFunction;
+type Functions = 'add'|'sub'|'mul'|'div'|'sup'|SpecialFunction;
 
 
 // -----------------------------------------------------------------------------

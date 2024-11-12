@@ -47,7 +47,7 @@ function numEquals(expr1: ExprElement, expr2: ExprElement) {
 
     // Return false if all items were NaN.
     return !!matches;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
