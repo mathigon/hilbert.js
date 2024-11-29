@@ -59,8 +59,6 @@ tape('Comparison Operators', (test) => {
 });
 
 tape('Unary Minus', (test) => {
-  test.throws(() => expr('1 * -1').collapse());
-  test.throws(() => expr('1 + -1').collapse());
   test.doesNotThrow(() => expr('x = -1').collapse());
   test.end();
 });
@@ -94,13 +92,14 @@ tape('brackets', (test) => {
 
 tape('errors', (test) => {
   test.throws(() => expr('a + + b').collapse());
-  test.throws(() => expr('a * - b').collapse());
   test.throws(() => expr('a + (a +)').collapse());
   test.throws(() => expr('a + (*)').collapse());
   test.throws(() => expr('(+) - a').collapse());
   test.throws(() => expr('2 =').collapse());
   test.throws(() => expr('2 = 1 =').collapse());
   test.throws(() => expr('< 1').collapse());
+  test.throws(() => expr('!2').collapse());
+  test.throws(() => expr('%2').collapse());
   test.end();
 });
 
@@ -127,5 +126,16 @@ tape('mixed numbers', (test) => {
   test.equals(expr('1 * 1/x').collapse().toString(), '1 × 1 / x');
   test.throws(() => expr('x 1/2').collapse());
   test.throws(() => expr('1/2 1/2').collapse());
+  test.end();
+});
+
+tape('Subtraction operators', (test) => {
+  test.equal(expr('a * - b').collapse().toString(), 'a × (−b)');
+  test.equal(expr('a + - b').collapse().toString(), 'a + (−b)');
+  test.equal(expr('a - - b').collapse().toString(), 'a − (−b)');
+  test.equal(expr('10% - b').collapse().toString(), '10% − b');
+  test.equal(expr('-(a + b)').collapse().toString(), '−(a + b)');
+  test.equal(expr('a - - - b').collapse().toString(), 'a − (−(−b))');
+  test.equal(expr('- - - b').collapse().toString(), '−(−(−b))');
   test.end();
 });
