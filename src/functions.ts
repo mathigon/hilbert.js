@@ -50,6 +50,13 @@ export class ExprFunction extends ExprElement {
 
     if (this.fn in vars) {
       const fn = vars[this.fn];
+      if (fn instanceof ExprFunctionDefinition) {
+        const nextMap = {...vars};
+        for (const [position, paramName] of fn.params.entries()) {
+          nextMap[paramName] = args[position];
+        }
+        return fn.evaluate(nextMap);
+      }
       if (typeof fn === 'function') return fn(...args);
       if (typeof fn === 'number' && args.length === 1) return evaluate.mul(fn, args[0]);
       throw ExprError.uncallableExpression(this.fn);
@@ -86,13 +93,22 @@ export class ExprFunction extends ExprElement {
     throw ExprError.undefinedFunction(this.fn);
   }
 
-  substitute(vars: ExprMap = {}) {
-    return new ExprFunction(this.fn, this.args.map(a => a.substitute(vars)));
+  substitute(vars: ExprMap = {}): ExprElement {
+    const args = this.args.map(a => a.substitute(vars));
+    if (this.fn in vars && vars[this.fn] instanceof ExprFunctionDefinition) {
+      return (vars[this.fn] as ExprFunctionDefinition).applyExpressions(args);
+    }
+    return new ExprFunction(this.fn, args);
   }
 
-  collapse() {
+  collapse(): ExprElement {
     if (this.fn === '(') return this.args[0].collapse();
-    return new ExprFunction(this.fn, this.args.map(a => a.collapse()));
+    const collapsedArgs = this.args.map(a => a.collapse());
+    const arg0 = collapsedArgs[0];
+    if (this.fn === '=' && isFunctionHead(arg0)) {
+      return new ExprFunctionDefinition(arg0.fn, arg0.unknowns, collapsedArgs[1]);
+    }
+    return new ExprFunction(this.fn, collapsedArgs);
   }
 
   get simplified() {
@@ -131,6 +147,18 @@ export class ExprFunction extends ExprElement {
 
     // TODO Implement other functions
     return `${this.fn}(${args.join(', ')})`;
+  }
+
+  partialEvaluate(vars: ExprMap = {}) {
+    const base = this.substitute(vars);
+    const fn: CustomFunction = (...args) => {
+      const vm: Record<string, number> = {};
+      for (const [index, arg] of base.unknowns.entries()) {
+        vm[arg] = args[index];
+      }
+      return base.evaluate(vm);
+    };
+    return fn;
   }
 
   toMathML(custom: MathMLMap = {}) {
@@ -243,6 +271,74 @@ export class ExprFunction extends ExprElement {
 
     if (isSpecialFunction(this.fn)) return `${this.fn} ${joined}`;
     return `${this.fn} of ${joined}`;
+  }
+}
+
+const LEGAL_CUSTOM_FUNCTION_NAME = new RegExp('^\\p{L}+$', 'u');
+
+function isFunctionHead<E extends ExprElement>(expr: E | ExprFunction): expr is ExprFunction {
+  return expr instanceof ExprFunction && LEGAL_CUSTOM_FUNCTION_NAME.test(expr.fn);
+}
+
+export class ExprFunctionDefinition extends ExprElement {
+  private _body: ExprElement;
+  constructor(readonly name: string, readonly params: string[], body: ExprElement) {
+    super();
+    this._body = body;
+  }
+
+  get body() {
+    return this._body;
+  }
+
+  private set body(b: ExprElement) {
+    this._body = b;
+  }
+
+  get unknowns() {
+    return this.body.unknowns.filter(u => !this.params.includes(u));
+  }
+
+  get variables() {
+    return this.body.variables.filter(v => !this.params.includes(v));
+  }
+
+  get functions() {
+    return this.body.functions;
+  }
+
+  withSubstitutedBody(vars: ExprMap) {
+    const n = new ExprFunctionDefinition(this.name, this.params, this.body);
+    n.bodySubstitute(vars);
+    return n;
+  }
+
+  bodySubstitute(vars: ExprMap) { // TODO: ensure that param vars dont get substituted
+    this.body = this.body.substitute(vars);
+  }
+
+  applyExpressions(args: ExprElement[]) {
+    const exprMap: ExprMap = {};
+    for (const [index, param] of this.params.entries()) {
+      exprMap[param] = args[index];
+    }
+    return this.body.substitute(exprMap);
+  }
+
+  applyVals = (...args: number[]) => {
+    const varMap: VarMap = {};
+    for (const [index, param] of this.params.entries()) {
+      varMap[param] = args[index];
+    }
+    return this.body.evaluate(varMap);
+  };
+
+  evaluate(vars: VarMap) {
+    return this.body.evaluate(vars);
+  }
+
+  toString() {
+    return `${this.name}(${this.params.join(',')})=${this.body}`;
   }
 }
 
