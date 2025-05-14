@@ -27,8 +27,9 @@ function createToken(buffer: string, type: TokenType) {
 
   if (type === TokenType.NUM) {
     // This can happen if users simply type ".", which get parsed as number.
-    if (isNaN(+buffer)) throw ExprError.invalidExpression();
-    return new ExprNumber(+buffer);
+    const numberWithoutCommas = buffer.replace(/,/g, '');
+    if (isNaN(+numberWithoutCommas)) throw ExprError.invalidExpression();
+    return new ExprNumber(+numberWithoutCommas);
   }
 
   if (type === TokenType.VAR) {
