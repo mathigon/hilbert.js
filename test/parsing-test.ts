@@ -34,6 +34,19 @@ tape('functions', (test) => {
   test.end();
 });
 
+tape('commas', (test) => {
+  test.equal(str('1,1'), '11');
+  test.equal(str('1,1 + 2,2'), '11 + 22');
+  test.equal(str('1,000 + 2,000'), '1000 + 2000');
+  test.equal(str('1,'), '1'); // Trailing comma
+  // test.equal(str(',1'), '1'); // Leading comma TODO: failing
+  test.equal(str('1,2,3'), '123'); // Multiple commas
+  test.equal(str('1,234,567.89'), '1234567.89'); // Multiple commas with a decimal point
+  test.equal(str('1,,2'), '12'); // Multiple consecutive commas
+  test.equal(str('1,2,'), '12'); // Multiple commas with trailing
+  test.end();
+});
+
 tape('strings', (test) => {
   test.equal(str('"A" + "B"'), '"A" + "B"');
   test.equal(str('"A"_"B"'), '"A"_"B"');

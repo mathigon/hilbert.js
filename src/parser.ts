@@ -27,8 +27,9 @@ function createToken(buffer: string, type: TokenType) {
 
   if (type === TokenType.NUM) {
     // This can happen if users simply type ".", which get parsed as number.
-    if (isNaN(+buffer)) throw ExprError.invalidExpression();
-    return new ExprNumber(+buffer);
+    const numberWithoutCommas = buffer.replace(/,/g, '');
+    if (isNaN(+numberWithoutCommas)) throw ExprError.invalidExpression();
+    return new ExprNumber(+numberWithoutCommas);
   }
 
   if (type === TokenType.VAR) {
@@ -54,8 +55,15 @@ export function tokenize(str: string) {
   const tokens = [];
   let buffer = '';
   let type = TokenType.UNKNOWN;
+  let parenDepth = 0;
 
   for (const s of str) {
+
+    if (['(', '[', '{'].includes(s)) {
+      parenDepth++;
+    } else if ([')', ']', '}'].includes(s)) {
+      parenDepth--;
+    }
 
     // Handle Strings
     if (s === '"') {
@@ -67,6 +75,22 @@ export function tokenize(str: string) {
       continue;
     } else if ((type as TokenType) === TokenType.STR) {
       buffer += s;
+      continue;
+    }
+
+    // Special handling for commas
+    if (s === ',') {
+      // If we're in a number and not inside parenthesis include the comma
+      if (type === TokenType.NUM && parenDepth === 0) {
+        buffer += s;
+        continue;
+      }
+      // Otherwise treat it as an operator
+      const token = createToken(buffer, type);
+      if (token) tokens.push(token);
+      tokens.push(new ExprOperator(','));
+      buffer = '';
+      type = TokenType.UNKNOWN;
       continue;
     }
 
